@@ -98,10 +98,10 @@ export function BillDialog({ orderId, onClose, onPaid }: { orderId: string; onCl
       <Modal open onClose={onClose} title="Payment received" footer={<Btn onClick={onClose}>Done</Btn>}>
         <div className="space-y-4">
           <div className="text-center">
-            <span className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-pine-50 text-pine-600"><Icon name="check" className="h-6 w-6" /></span>
+            <span className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600"><Icon name="check" className="h-6 w-6" /></span>
             <p className="font-display text-2xl font-bold">{inr(o.total)}</p>
             <p className="text-sm text-ink-mute">Invoice {done.invoice_no}</p>
-            {done.points_earned > 0 && <p className="mt-1 text-sm font-medium text-pine-700">Customer earned {done.points_earned} points</p>}
+            {done.points_earned > 0 && <p className="mt-1 text-sm font-medium text-emerald-700">Customer earned {done.points_earned} points</p>}
           </div>
           <Btn variant="secondary" className="w-full" onClick={() => print(<Invoice restaurant={restaurant} order={o} items={done.items} payments={done.payments} />)}>
             <Icon name="print" className="h-4 w-4" /> Print bill
@@ -170,7 +170,7 @@ export function BillDialog({ orderId, onClose, onPaid }: { orderId: string; onCl
                   <Btn variant="ghost" size="sm" onClick={() => setPays([...pays.map((p, i) => (i === 0 && pays.length === 1 ? { ...p, amount: '' } : p)), { method: 'upi', amount: '' }])}>
                     <Icon name="plus" className="h-4 w-4" /> Split payment
                   </Btn>
-                  {pays.length > 1 && <span className={Math.abs(remaining) < 0.01 ? 'text-pine-700' : 'text-chili-600'}>{Math.abs(remaining) < 0.01 ? 'Matches total' : `Remaining ${inr(remaining, 2)}`}</span>}
+                  {pays.length > 1 && <span className={Math.abs(remaining) < 0.01 ? 'text-emerald-700' : 'text-rose-600'}>{Math.abs(remaining) < 0.01 ? 'Matches total' : `Remaining ${inr(remaining, 2)}`}</span>}
                 </div>
               ) : <p className="mt-2 text-xs text-ink-mute">Split payments are available on a paid plan.</p>}
               {pays.length === 1 && pays[0].method === 'cash' && (

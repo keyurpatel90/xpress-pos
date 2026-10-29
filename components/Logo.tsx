@@ -1,21 +1,22 @@
 import Link from 'next/link';
+import { Icon } from '@/components/Icon';
 
-export function LogoMark({ className = 'h-8 w-8' }: { className?: string }) {
+export function LogoMark({ className = 'h-9 w-9' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
-      <path d="M6 3h20v22l-3.3-2.2L19.3 25 16 22.8 12.7 25l-3.4-2.2L6 25z" fill="#0E6B52" />
-      <path d="M17.5 8l-6.5 8.5h4.2L14 22.5l6.5-8.5h-4.2z" fill="#F5C242" />
-    </svg>
+    <span className={`inline-flex shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-sm ${className}`}>
+      <Icon name="menu" className="h-5 w-5" />
+    </span>
   );
 }
 
-export function Logo({ href = '/', light = false }: { href?: string; light?: boolean }) {
+export function Logo({ href = '/', light = false, pill = false }: { href?: string; light?: boolean; pill?: boolean }) {
   return (
-    <Link href={href} className="inline-flex items-center gap-2">
+    <Link href={href} className="inline-flex items-center gap-2.5">
       <LogoMark />
-      <span className={`font-display text-xl font-bold tracking-tight ${light ? 'text-white' : 'text-ink'}`}>
-        Xpress<span className={light ? 'text-turmeric-400' : 'text-pine-600'}> POS</span>
+      <span className={`font-display text-xl font-extrabold tracking-tight ${light ? 'text-white' : 'text-ink'}`}>
+        Xpress<span className={light ? 'text-brand-300' : 'text-brand-600'}>POS</span>
       </span>
+      {pill && <span className="hidden rounded-md bg-brand-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-brand-700 sm:inline">Cloud POS</span>}
     </Link>
   );
 }

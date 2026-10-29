@@ -17,11 +17,11 @@ export function ContactForm() {
   }
 
   if (state === 'sent') {
-    return <div role="status" className="rounded-2xl bg-pine-50 p-6 text-pine-800"><p className="font-display text-xl font-bold">Thanks, we have your message.</p><p className="mt-1 text-sm">We will reply to {f.email} by email.</p></div>;
+    return <div role="status" className="rounded-2xl bg-brand-50 p-6 text-brand-800"><p className="font-display text-xl font-bold">Thanks, we have your message.</p><p className="mt-1 text-sm">We will reply to {f.email} by email.</p></div>;
   }
   return (
     <form onSubmit={submit} className="space-y-4 rounded-2xl border border-line bg-white p-6">
-      {error && <p role="alert" className="rounded-lg bg-chili-50 p-3 text-sm text-chili-600">{error}</p>}
+      {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-600">{error}</p>}
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Your name"><Input required value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></Field>
         <Field label="Mobile (optional)"><Input inputMode="tel" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} /></Field>

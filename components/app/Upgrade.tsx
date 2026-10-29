@@ -11,7 +11,7 @@ export function UpgradeCard({ feature }: { feature: string }) {
   const { role, access } = useApp();
   return (
     <div className="mx-auto mt-10 max-w-md rounded-2xl border border-line bg-white p-8 text-center shadow-lift">
-      <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-turmeric-50 text-turmeric-600"><Icon name="lock" className="h-6 w-6" /></span>
+      <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-600"><Icon name="lock" className="h-6 w-6" /></span>
       <h2 className="font-display text-xl font-bold">{featureName(feature)} is on a paid plan</h2>
       <p className="mt-2 text-sm text-ink-mute">
         {access.status === 'trialing'

@@ -128,7 +128,7 @@ export default function InventoryPage() {
             {hist.rows.map((m) => (
               <li key={m.id} className="flex items-center justify-between py-2">
                 <span>{REASONS[m.reason] ?? m.reason}{m.note ? <span className="text-ink-mute"> · {m.note}</span> : ''}<span className="block text-xs text-ink-mute">{fmtDate(m.created_at, true)}</span></span>
-                <b className={Number(m.change) < 0 ? 'text-chili-600' : 'text-pine-700'}>{Number(m.change) > 0 ? '+' : ''}{Number(m.change)} {hist.item.unit}</b>
+                <b className={Number(m.change) < 0 ? 'text-rose-600' : 'text-brand-700'}>{Number(m.change) > 0 ? '+' : ''}{Number(m.change)} {hist.item.unit}</b>
               </li>
             ))}
           </ul>

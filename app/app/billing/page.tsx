@@ -88,16 +88,16 @@ export default function BillingPage() {
           const price = cycle === 'yearly' ? Number(p.price_yearly ?? p.price_monthly * 12) : Number(p.price_monthly);
           const current = access.status === 'active' && access.plan_id === p.id;
           return (
-            <Card key={p.id} className={cn('flex flex-col p-5', p.is_popular && 'border-pine-500 ring-1 ring-pine-500')}>
+            <Card key={p.id} className={cn('flex flex-col p-5', p.is_popular && 'border-brand-500 ring-1 ring-brand-500')}>
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-xl font-bold">{p.name}</h2>
-                {p.is_popular && <Badge tone="green">Most popular</Badge>}
+                {p.is_popular && <Badge tone="brand">Most popular</Badge>}
                 {current && !p.is_popular && <Badge tone="green">Current</Badge>}
               </div>
               <p className="text-sm text-ink-mute">{p.description}</p>
               <p className="mt-3 font-display text-3xl font-bold">{inr(price)}<span className="text-sm font-medium text-ink-mute"> / {cycle === 'yearly' ? 'year' : 'month'}</span></p>
               <ul className="my-4 flex-1 space-y-1.5 text-sm">
-                {(p.highlights as string[]).map((h) => <li key={h} className="flex gap-2"><Icon name="check" className="mt-0.5 h-4 w-4 shrink-0 text-pine-600" />{h}</li>)}
+                {(p.highlights as string[]).map((h) => <li key={h} className="flex gap-2"><Icon name="check" className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />{h}</li>)}
               </ul>
               <Btn onClick={() => pay(p)} loading={busy === p.id} disabled={!!busy} variant={p.is_popular ? 'primary' : 'secondary'}>{label(p)}</Btn>
             </Card>

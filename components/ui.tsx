@@ -65,7 +65,7 @@ export function Toggle({ checked, onChange, label, disabled }: { checked: boolea
       onClick={() => onChange(!checked)}
       className="inline-flex items-center gap-2 text-sm disabled:opacity-50"
     >
-      <span className={cn('relative h-6 w-11 rounded-full transition-colors', checked ? 'bg-pine-600' : 'bg-line')}>
+      <span className={cn('relative h-6 w-11 rounded-full transition-colors', checked ? 'bg-brand-600' : 'bg-line')}>
         <span className={cn('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all', checked ? 'left-[22px]' : 'left-0.5')} />
       </span>
       {label && <span className="text-ink-soft">{label}</span>}
@@ -85,14 +85,14 @@ export function Modal({ open, onClose, title, children, footer, wide }:
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/50 p-0 sm:items-center sm:p-4" onMouseDown={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={onClose}>
       <div
         role="dialog" aria-modal="true" aria-label={title}
         onMouseDown={(e) => e.stopPropagation()}
-        className={cn('flex max-h-[92vh] w-full flex-col rounded-t-2xl bg-white shadow-lift sm:rounded-2xl', wide ? 'sm:max-w-3xl' : 'sm:max-w-lg')}
+        className={cn('flex max-h-[92vh] w-full flex-col rounded-t-3xl bg-white shadow-lift sm:rounded-2xl', wide ? 'sm:max-w-3xl' : 'sm:max-w-lg')}
       >
         <div className="flex items-center justify-between border-b border-line px-5 py-3">
-          <h2 className="font-display text-lg font-semibold">{title}</h2>
+          <h2 className="font-display text-lg font-bold tracking-tight">{title}</h2>
           <button onClick={onClose} className="rounded-lg p-1.5 text-ink-mute hover:bg-field" aria-label="Close"><Icon name="x" /></button>
         </div>
         <div className="overflow-y-auto px-5 py-4">{children}</div>
@@ -104,9 +104,11 @@ export function Modal({ open, onClose, title, children, footer, wide }:
 
 const TONES = {
   gray: 'bg-field text-ink-soft',
-  green: 'bg-pine-50 text-pine-700',
-  red: 'bg-chili-50 text-chili-600',
-  yellow: 'bg-turmeric-50 text-turmeric-600',
+  green: 'bg-emerald-50 text-emerald-700',
+  red: 'bg-rose-50 text-rose-600',
+  yellow: 'bg-amber-50 text-amber-700',
+  blue: 'bg-blue-50 text-blue-700',
+  brand: 'bg-brand-50 text-brand-700',
   dark: 'bg-ink text-white',
 };
 export function Badge({ tone = 'gray', children, className }: { tone?: keyof typeof TONES; children: ReactNode; className?: string }) {
@@ -121,7 +123,7 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="font-display text-2xl font-bold tracking-tight">{title}</h1>
+        <h1 className="font-display text-2xl font-extrabold tracking-tight">{title}</h1>
         {subtitle && <p className="mt-0.5 text-sm text-ink-mute">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -132,7 +134,7 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
 export function Empty({ icon = 'box', title, text, action }: { icon?: string; title: string; text?: string; action?: ReactNode }) {
   return (
     <div className="flex flex-col items-center rounded-xl border border-dashed border-line bg-white px-6 py-12 text-center">
-      <span className="mb-3 rounded-full bg-pine-50 p-3 text-pine-600"><Icon name={icon} className="h-6 w-6" /></span>
+      <span className="mb-3 rounded-2xl bg-brand-50 p-3 text-brand-600"><Icon name={icon} className="h-6 w-6" /></span>
       <p className="font-display text-lg font-semibold">{title}</p>
       {text && <p className="mt-1 max-w-sm text-sm text-ink-mute">{text}</p>}
       {action && <div className="mt-4">{action}</div>}
@@ -141,30 +143,38 @@ export function Empty({ icon = 'box', title, text, action }: { icon?: string; ti
 }
 
 export function Loading() {
-  return <div className="flex justify-center py-16 text-pine-600"><Spinner className="h-7 w-7" /></div>;
+  return <div className="flex justify-center py-16 text-brand-600"><Spinner className="h-7 w-7" /></div>;
 }
 
 export function Stat({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: string; tone?: 'warn' }) {
   return (
     <div className="card p-4">
-      <p className="text-sm text-ink-mute">{label}</p>
-      <p className={cn('mt-1 font-display text-2xl font-bold tracking-tight', tone === 'warn' && 'text-chili-600')}>{value}</p>
+      <p className="label-caps">{label}</p>
+      <p className={cn('mt-1.5 font-display text-2xl font-extrabold tracking-tight', tone === 'warn' && 'text-rose-600')}>{value}</p>
       {sub && <p className="mt-0.5 text-xs text-ink-mute">{sub}</p>}
     </div>
   );
 }
 
-export function Segmented<T extends string>({ value, onChange, options }: { value: T; onChange: (v: T) => void; options: { id: T; label: string }[] }) {
+/** variant "brand": violet active pill in a white tray. variant "soft": white active tab in a grey tray (order type). */
+export function Segmented<T extends string>({ value, onChange, options, variant = 'brand' }:
+  { value: T; onChange: (v: T) => void; options: { id: T; label: string; icon?: string }[]; variant?: 'brand' | 'soft' }) {
   return (
-    <div className="inline-flex rounded-lg border border-line bg-white p-0.5">
-      {options.map((o) => (
-        <button
-          key={o.id} type="button" onClick={() => onChange(o.id)}
-          className={cn('rounded-md px-3 py-1.5 text-sm font-medium transition-colors', value === o.id ? 'bg-pine-600 text-white' : 'text-ink-soft hover:bg-field')}
-        >
-          {o.label}
-        </button>
-      ))}
+    <div className={cn('inline-flex gap-0.5 rounded-xl p-1', variant === 'soft' ? 'bg-slate-100' : 'border border-line bg-white shadow-sm')}>
+      {options.map((o) => {
+        const on = value === o.id;
+        return (
+          <button
+            key={o.id} type="button" onClick={() => onChange(o.id)} aria-pressed={on}
+            className={cn('inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors',
+              variant === 'soft'
+                ? on ? 'bg-white text-ink shadow-sm' : 'text-ink-mute hover:text-ink'
+                : on ? 'bg-brand-600 text-white shadow-sm' : 'text-ink-mute hover:bg-field')}
+          >
+            {o.icon && <Icon name={o.icon} className="h-4 w-4" />}{o.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -173,8 +183,8 @@ export function Table({ head, children }: { head: string[]; children: ReactNode 
   return (
     <div className="card overflow-x-auto">
       <table className="w-full text-left text-sm">
-        <thead className="border-b border-line bg-field/60 text-ink-mute">
-          <tr>{head.map((h) => <th key={h} className="whitespace-nowrap px-4 py-2.5 font-medium">{h}</th>)}</tr>
+        <thead className="border-b border-line bg-slate-50">
+          <tr>{head.map((h) => <th key={h} className="label-caps whitespace-nowrap px-4 py-3">{h}</th>)}</tr>
         </thead>
         <tbody className="divide-y divide-line">{children}</tbody>
       </table>

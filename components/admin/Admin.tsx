@@ -18,7 +18,7 @@ function useRun() {
       setMsg(r.ok ? { ok: true, text: ok } : { ok: false, text: r.error });
       if (r.ok) { after?.(); router.refresh(); }
     });
-  const note = msg && <p role="status" className={cn('text-sm', msg.ok ? 'text-pine-700' : 'text-chili-600')}>{msg.text}</p>;
+  const note = msg && <p role="status" className={cn('text-sm', msg.ok ? 'text-brand-700' : 'text-rose-600')}>{msg.text}</p>;
   return { run, pending, note };
 }
 

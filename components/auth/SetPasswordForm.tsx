@@ -38,11 +38,11 @@ export function SetPasswordForm() {
 
   if (state === 'checking') return <Loading />;
   if (state === 'none') {
-    return <p className="rounded-lg bg-chili-50 p-4 text-sm text-chili-600">This link has expired or was already used. <Link href="/forgot-password" className="font-semibold underline">Request a new one</Link> or ask your restaurant owner to resend your invitation.</p>;
+    return <p className="rounded-lg bg-rose-50 p-4 text-sm text-rose-600">This link has expired or was already used. <Link href="/forgot-password" className="font-semibold underline">Request a new one</Link> or ask your restaurant owner to resend your invitation.</p>;
   }
   return (
     <form onSubmit={submit} className="space-y-4">
-      {error && <p role="alert" className="rounded-lg bg-chili-50 p-3 text-sm text-chili-600">{error}</p>}
+      {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-600">{error}</p>}
       <Field label="New password" hint="At least 8 characters"><Input type="password" required autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} /></Field>
       <Field label="Confirm password"><Input type="password" required autoComplete="new-password" value={pw2} onChange={(e) => setPw2(e.target.value)} /></Field>
       <Btn type="submit" size="lg" className="w-full" loading={busy}>Save password and continue</Btn>

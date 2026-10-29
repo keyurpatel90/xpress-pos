@@ -170,13 +170,13 @@ function Pos() {
       <section className="flex min-h-0 flex-1 flex-col">
         <div className="space-y-2 border-b border-line bg-white p-3">
           <div className="flex flex-wrap items-center gap-2">
-            <Segmented value={ordType} onChange={(v) => { setOrdType(v); if (v !== 'dine_in') { setTableId(null); setActiveId(null); } }} options={ORDER_TYPES} />
+            <Segmented variant="soft" value={ordType} onChange={(v) => { setOrdType(v); if (v !== 'dine_in') { setTableId(null); setActiveId(null); } }} options={ORDER_TYPES} />
             <Btn variant="secondary" size="sm" onClick={() => setPicker(true)}>Open orders ({open.length})</Btn>
             <div className="relative min-w-[140px] flex-1 sm:max-w-xs">
               <Icon name="search" className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-ink-mute" />
               <Input className="pl-9" placeholder="Search menu" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
-            <Toggle checked={vegOnly} onChange={setVegOnly} label="Veg only" />
+            <button type="button" onClick={() => setVegOnly(!vegOnly)} aria-pressed={vegOnly} className={cn('inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold', vegOnly ? 'border-emerald-400 bg-emerald-50 text-emerald-700' : 'border-line bg-white text-ink-soft')}><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />Veg only</button>
           </div>
           {ordType === 'dine_in' && (
             <div className="no-scrollbar flex gap-2 overflow-x-auto">
@@ -185,8 +185,8 @@ function Pos() {
                 const busyT = open.some((o) => o.table_id === t.id);
                 return (
                   <button key={t.id} onClick={() => selectTable(t.id)}
-                    className={cn('shrink-0 rounded-lg border px-3 py-1.5 text-sm font-semibold',
-                      tableId === t.id ? 'border-pine-600 bg-pine-600 text-white' : busyT ? 'border-turmeric-400 bg-turmeric-50' : 'border-line bg-white hover:bg-field')}>
+                    className={cn('shrink-0 rounded-lg border-2 px-3 py-1.5 text-sm font-bold',
+                      tableId === t.id ? 'border-brand-600 bg-brand-600 text-white shadow-sm' : busyT ? 'border-rose-300 bg-rose-50 text-rose-700' : 'border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50')}>
                     {t.name}
                   </button>
                 );
@@ -196,10 +196,10 @@ function Pos() {
           {Object.keys(readyBy).length > 0 && (
             <div className="no-scrollbar flex gap-2 overflow-x-auto">
               {Object.entries(readyBy).map(([where, its]) => (
-                <div key={where} className="flex shrink-0 items-center gap-2 rounded-lg bg-pine-50 px-3 py-1.5 text-sm">
-                  <Icon name="bell" className="h-4 w-4 text-pine-600" />
+                <div key={where} className="flex shrink-0 items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm">
+                  <Icon name="bell" className="h-4 w-4 text-emerald-600" />
                   <span><b>{where}</b> ready: {its.map((i) => `${i.qty}× ${i.name}`).join(', ')}</span>
-                  <button onClick={() => serve(its.map((i) => i.id))} className="rounded-md bg-pine-600 px-2 py-0.5 text-xs font-semibold text-white">Served</button>
+                  <button onClick={() => serve(its.map((i) => i.id))} className="rounded-md bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white">Served</button>
                 </div>
               ))}
             </div>
@@ -208,7 +208,7 @@ function Pos() {
         <div className="no-scrollbar flex gap-2 overflow-x-auto border-b border-line bg-white px-3 py-2">
           {[{ id: 'all', name: 'All' }, ...(cat.cats as Row[])].map((c) => (
             <button key={c.id} onClick={() => setCatId(c.id)}
-              className={cn('shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium', catId === c.id ? 'bg-ink text-white' : 'bg-field text-ink-soft hover:bg-line')}>
+              className={cn('shrink-0 rounded-lg px-3.5 py-1.5 text-sm font-semibold', catId === c.id ? 'bg-brand-600 text-white shadow-sm' : 'bg-slate-100 text-ink-soft hover:bg-slate-200')}>
               {c.name}
             </button>
           ))}
@@ -222,14 +222,19 @@ function Pos() {
                 const inCart = lines.filter((l) => l.item.id === i.id).reduce((s, l) => s + l.qty, 0);
                 return (
                   <button key={i.id} onClick={() => tap(i)}
-                    className={cn('relative rounded-xl border bg-white p-3 text-left transition-colors hover:border-pine-500', !i.is_available && 'opacity-50', inCart ? 'border-pine-500 ring-1 ring-pine-500' : 'border-line')}>
-                    <span className={cn('mb-1.5 flex h-4 w-4 items-center justify-center rounded-sm border', i.is_veg ? 'border-pine-600' : 'border-chili-500')}>
-                      <span className={cn('h-2 w-2 rounded-full', i.is_veg ? 'bg-pine-600' : 'bg-chili-500')} />
+                    className={cn('relative flex flex-col rounded-xl border bg-white p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-400 hover:shadow-md', !i.is_available && 'opacity-55', inCart ? 'border-brand-500 ring-2 ring-brand-500/30' : 'border-line')}>
+                    <span className="flex items-center justify-between">
+                      <span className={cn('flex h-4 w-4 items-center justify-center rounded-[3px] border-[1.5px]', i.is_veg ? 'border-emerald-600' : 'border-rose-500')}>
+                        <span className={cn('h-1.5 w-1.5 rounded-full', i.is_veg ? 'bg-emerald-600' : 'bg-rose-500')} />
+                      </span>
+                      <span className="font-display text-base font-extrabold">{inr(i.price)}</span>
                     </span>
-                    <p className="line-clamp-2 min-h-[2.5rem] text-sm font-semibold leading-5">{i.name}</p>
-                    <p className="mt-1 text-sm text-ink-soft">{inr(i.price)} <span className="text-xs text-ink-mute">/ {i.unit}</span></p>
-                    {!i.is_available && <span className="absolute right-2 top-2 text-[11px] font-semibold text-chili-600">Unavailable</span>}
-                    {inCart > 0 && <span className="absolute right-2 top-2 flex h-6 min-w-6 items-center justify-center rounded-full bg-pine-600 px-1.5 text-xs font-bold text-white">{inCart}</span>}
+                    <span className="mt-2 line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-5">{i.name}</span>
+                    <span className="mt-2 flex items-center gap-1.5 border-t border-line pt-2 text-xs font-medium text-ink-mute">
+                      <Icon name="box" className="h-3.5 w-3.5" />per {i.unit}
+                      {!i.is_available && <span className="ml-auto font-bold text-rose-600">Unavailable</span>}
+                      {inCart > 0 && <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1.5 text-[11px] font-bold text-white">{inCart}</span>}
+                    </span>
                   </button>
                 );
               })}
@@ -242,7 +247,7 @@ function Pos() {
       <aside className={cn('fixed inset-0 z-40 flex-col bg-white lg:static lg:z-auto lg:flex lg:w-[400px] lg:shrink-0 lg:border-l lg:border-line', cartOpen ? 'flex' : 'hidden')}>
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <div>
-            <p className="font-display text-lg font-semibold">{activeOrder ? `Order #${activeOrder.order_no}` : 'New order'}</p>
+            <p className="font-display text-lg font-extrabold">{activeOrder ? `Order #${activeOrder.order_no}` : 'New order'}</p>
             <p className="text-xs text-ink-mute">
               {typeLabel(ordType)}{ordType === 'dine_in' && tableId ? ` · Table ${(cat.tables as Row[]).find((t) => t.id === tableId)?.name ?? ''}` : ''}
               {activeOrder?.customer_name ? ` · ${activeOrder.customer_name}` : ''}
@@ -254,7 +259,7 @@ function Pos() {
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
           {sentItems.length > 0 && (
             <div className="mb-4">
-              <p className="mb-1 text-xs font-semibold text-ink-mute">Sent to kitchen</p>
+              <p className="label-caps mb-1.5">Sent to kitchen</p>
               <ul className="divide-y divide-line rounded-lg border border-line">
                 {sentItems.map((i) => (
                   <li key={i.id} className="flex items-center gap-2 px-3 py-2 text-sm">
@@ -263,7 +268,7 @@ function Pos() {
                       {(i.modifiers ?? []).length > 0 && <span className="block truncate text-xs text-ink-mute">{(i.modifiers as Row[]).map((m) => m.name).join(', ')}</span>}
                     </span>
                     <Badge tone={STATUS_TONE[i.status]}>{i.status}</Badge>
-                    {canBill && <button onClick={() => cancelItem(i.id)} className="text-ink-mute hover:text-chili-600" aria-label="Cancel item"><Icon name="trash" className="h-4 w-4" /></button>}
+                    {canBill && <button onClick={() => cancelItem(i.id)} className="text-ink-mute hover:text-rose-600" aria-label="Cancel item"><Icon name="trash" className="h-4 w-4" /></button>}
                   </li>
                 ))}
               </ul>
@@ -272,8 +277,8 @@ function Pos() {
           {lines.length > 0 ? (
             <div>
               <div className="mb-1 flex items-center justify-between">
-                <p className="text-xs font-semibold text-ink-mute">New items</p>
-                <button onClick={() => setLines([])} className="text-xs text-ink-mute hover:text-chili-600">Clear</button>
+                <p className="label-caps">Selected items ({count})</p>
+                <button onClick={() => setLines([])} className="text-xs font-bold text-rose-600 hover:underline">Clear all</button>
               </div>
               <ul className="space-y-2">
                 {lines.map((l) => (
@@ -304,21 +309,32 @@ function Pos() {
         </div>
 
         <div className="space-y-2 border-t border-line p-4">
-          {!activeOrder && <CustomerPicker value={customer} onChange={setCustomer} />}
+          {!activeOrder && <><p className="label-caps">Customer and order details</p><CustomerPicker value={customer} onChange={setCustomer} /></>}
           <Input placeholder="Order note (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
-          <div className="flex items-end justify-between text-sm">
-            <span className="text-ink-mute">{lines.length > 0 ? `New items (${count}), est. with tax` : activeOrder ? 'Bill so far' : 'Total'}</span>
-            <span className="font-display text-xl font-bold">{inr(lines.length > 0 ? est.total : activeOrder?.total ?? 0)}</span>
-          </div>
+          {lines.length > 0 ? (
+            <dl className="space-y-1 pb-1 text-sm">
+              <div className="flex justify-between text-ink-mute"><dt>Subtotal</dt><dd>{inr(est.sub, 2)}</dd></div>
+              {est.sc > 0 && <div className="flex justify-between text-ink-mute"><dt>Service charge</dt><dd>{inr(est.sc, 2)}</dd></div>}
+              <div className="flex justify-between text-ink-mute"><dt>{restaurant.tax_inclusive ? 'GST (included)' : 'GST'}</dt><dd>{inr(est.tax, 2)}</dd></div>
+              <div className="flex items-end justify-between border-t border-line pt-2">
+                <dt className="font-bold">Estimated total</dt><dd className="font-display text-xl font-extrabold text-brand-600">{inr(est.total)}</dd>
+              </div>
+            </dl>
+          ) : (
+            <div className="flex items-end justify-between text-sm">
+              <span className="font-bold">{activeOrder ? 'Bill so far' : 'Total'}</span>
+              <span className="font-display text-xl font-extrabold text-brand-600">{inr(activeOrder?.total ?? 0)}</span>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-2">
-            <Btn onClick={() => sendKot(false)} loading={busy} disabled={!lines.length} className="col-span-2 sm:col-span-1">
-              <Icon name="flame" className="h-4 w-4" /> Send to kitchen
+            <Btn onClick={() => sendKot(false)} loading={busy} disabled={!lines.length} size="lg" className="col-span-2 btn-glow">
+              <Icon name="send" className="h-4 w-4" /> Send to kitchen (generate KOT)
             </Btn>
-            <Btn variant="secondary" onClick={() => sendKot(true)} disabled={!lines.length || busy}>
-              <Icon name="print" className="h-4 w-4" /> Send + print KOT
+            <Btn variant="secondary" className="col-span-2" onClick={() => sendKot(true)} disabled={!lines.length || busy}>
+              <Icon name="print" className="h-4 w-4" /> Send and print KOT slip
             </Btn>
             {canBill && (
-              <Btn variant="accent" className="col-span-2" disabled={!activeOrder || lines.length > 0} onClick={() => activeOrder && setBillFor(activeOrder.id)}>
+              <Btn variant="accent" size="lg" className="col-span-2" disabled={!activeOrder || lines.length > 0} onClick={() => activeOrder && setBillFor(activeOrder.id)}>
                 {lines.length > 0 ? 'Send items before billing' : `Bill ${activeOrder ? inr(activeOrder.total) : ''}`}
               </Btn>
             )}
@@ -326,7 +342,7 @@ function Pos() {
           {activeOrder && (
             <div className="flex justify-between">
               <button onClick={() => printKot(activeOrder.id)} className="text-xs text-ink-mute underline">Reprint last KOT</button>
-              {canBill && <button onClick={cancelOrder} className="text-xs text-chili-600 underline">Cancel order</button>}
+              {canBill && <button onClick={cancelOrder} className="text-xs text-rose-600 underline">Cancel order</button>}
             </div>
           )}
         </div>
@@ -390,7 +406,7 @@ function ModifierDialog({ item, groups, onClose, onAdd }: { item: Row | null; gr
                 const on = (sel[g.id] ?? []).includes(o.id);
                 return (
                   <button key={o.id} onClick={() => toggle(g, o.id)}
-                    className={cn('rounded-lg border px-3 py-1.5 text-sm font-medium', on ? 'border-pine-600 bg-pine-600 text-white' : 'border-line hover:bg-field')}>
+                    className={cn('rounded-lg border px-3 py-1.5 text-sm font-medium', on ? 'border-brand-600 bg-brand-600 text-white' : 'border-line hover:bg-field')}>
                     {o.name}{Number(o.price) > 0 ? ` +${inr(o.price)}` : ''}
                   </button>
                 );

@@ -8,8 +8,8 @@ export const metadata: Metadata = { title: 'FAQ', description: 'Answers about th
 export default function FaqPage() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-14">
-      <h1 className="font-display text-4xl font-bold tracking-tight md:text-5xl">Frequently asked questions</h1>
-      <p className="mb-8 mt-3 text-lg text-ink-soft">Cannot find your answer? <Link href="/support" className="font-semibold text-pine-700 underline">Contact support</Link>.</p>
+      <h1 className="font-display text-4xl font-extrabold tracking-tight md:text-5xl">Frequently asked questions</h1>
+      <p className="mb-8 mt-3 text-lg text-ink-soft">Cannot find your answer? <Link href="/support" className="font-semibold text-brand-700 underline">Contact support</Link>.</p>
       <FaqList items={FAQS} />
     </div>
   );

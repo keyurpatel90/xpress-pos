@@ -15,7 +15,7 @@ export function SiteFooter() {
         <div>
           <Logo />
           <p className="mt-3 max-w-xs text-sm text-ink-mute">{TAGLINE}.</p>
-          {SUPPORT_EMAIL && <a href={`mailto:${SUPPORT_EMAIL}`} className="mt-3 block text-sm font-medium text-pine-700">{SUPPORT_EMAIL}</a>}
+          {SUPPORT_EMAIL && <a href={`mailto:${SUPPORT_EMAIL}`} className="mt-3 block text-sm font-medium text-brand-700">{SUPPORT_EMAIL}</a>}
         </div>
         {COLS.map((c) => (
           <div key={c.title}>

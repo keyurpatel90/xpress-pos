@@ -41,12 +41,12 @@ export function LoginForm({ next, verified, error: initialError }: { next?: stri
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      {!configured && <p className="rounded-lg bg-chili-50 p-3 text-sm text-chili-600">Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.</p>}
-      {notice && <p role="status" className="rounded-lg bg-pine-50 p-3 text-sm text-pine-700">{notice}</p>}
-      {error && <p role="alert" className="rounded-lg bg-chili-50 p-3 text-sm text-chili-600">{error}</p>}
+      {!configured && <p className="rounded-lg bg-rose-50 p-3 text-sm text-rose-600">Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.</p>}
+      {notice && <p role="status" className="rounded-lg bg-brand-50 p-3 text-sm text-brand-700">{notice}</p>}
+      {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-600">{error}</p>}
       <Field label="Email"><Input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
       <Field label="Password"><Input type="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
-      <div className="text-right text-sm"><Link href="/forgot-password" className="font-medium text-pine-700 hover:underline">Forgot password?</Link></div>
+      <div className="text-right text-sm"><Link href="/forgot-password" className="font-medium text-brand-700 hover:underline">Forgot password?</Link></div>
       <Btn type="submit" size="lg" className="w-full" loading={busy}>Sign in</Btn>
       {unverified && email && <Btn variant="secondary" className="w-full" onClick={resend}>Resend verification email</Btn>}
     </form>

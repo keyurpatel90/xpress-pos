@@ -53,7 +53,7 @@ export default function StaffPage() {
                   <Btn size="sm" variant="secondary" onClick={() => patch(s.id, { status: s.status === 'disabled' ? 'active' : 'disabled' }, s.status === 'disabled' ? 'Access restored' : 'Access disabled')}>
                     {s.status === 'disabled' ? 'Enable' : 'Disable'}
                   </Btn>
-                  <button onClick={() => remove(s)} className="ml-1 p-1.5 text-ink-mute hover:text-chili-600" aria-label="Remove"><Icon name="trash" className="h-4 w-4" /></button>
+                  <button onClick={() => remove(s)} className="ml-1 p-1.5 text-ink-mute hover:text-rose-600" aria-label="Remove"><Icon name="trash" className="h-4 w-4" /></button>
                 </>}
               </td>
             </tr>

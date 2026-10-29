@@ -26,7 +26,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!restaurant || !profile) return <NoAccess />;
 
   return (
-    <AppProvider initial={{ access, restaurant: restaurant as Row, profile: profile as Row, email: user.email ?? '' }}>
+    <AppProvider initial={{ access, restaurant: restaurant as Row, profile: profile as Row, email: user.email ?? '', verified: !!user.email_confirmed_at }}>
       <AppShell>{children}</AppShell>
     </AppProvider>
   );

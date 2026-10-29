@@ -1,4 +1,4 @@
-export function BarChart({ data, format = (n: number) => String(n), color = 'bg-pine-500' }:
+export function BarChart({ data, format = (n: number) => String(n), color = 'bg-brand-500' }:
   { data: { label: string; value: number }[]; format?: (n: number) => string; color?: string }) {
   const max = Math.max(1, ...data.map((d) => d.value));
   return (

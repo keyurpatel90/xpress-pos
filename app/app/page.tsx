@@ -42,7 +42,7 @@ export default function Dashboard() {
             {steps.map((s) => (
               <li key={s.label}>
                 <Link href={s.href} className="flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm hover:bg-field">
-                  <span className={`flex h-5 w-5 items-center justify-center rounded-full ${s.done ? 'bg-pine-600 text-white' : 'border border-line'}`}>
+                  <span className={`flex h-5 w-5 items-center justify-center rounded-full ${s.done ? 'bg-emerald-500 text-white' : 'border border-line'}`}>
                     {s.done && <Icon name="check" className="h-3 w-3" />}
                   </span>
                   <span className={s.done ? 'text-ink-mute line-through' : 'font-medium'}>{s.label}</span>

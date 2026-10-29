@@ -62,7 +62,7 @@ export function estimate(lines: { price: number; qty: number; modTotal: number; 
     const line = (l.price + l.modTotal) * l.qty;
     return s + (rest?.tax_inclusive ? (line * l.taxRate) / (100 + l.taxRate) : (line * l.taxRate) / 100);
   }, 0);
-  return { sub, tax, total: Math.round(sub + sc + (rest?.tax_inclusive ? 0 : tax)) };
+  return { sub, sc, tax, total: Math.round(sub + sc + (rest?.tax_inclusive ? 0 : tax)) };
 }
 
 export const siteUrl = () => (process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '');

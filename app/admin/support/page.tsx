@@ -15,7 +15,7 @@ export default async function AdminSupport() {
           {tickets.map((t) => (
             <article key={t.id} className="card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-semibold">{t.name} <a className="font-normal text-pine-700" href={`mailto:${t.email}`}>{t.email}</a>{t.phone ? <span className="font-normal text-ink-mute"> · {t.phone}</span> : null}</p>
+                <p className="font-semibold">{t.name} <a className="font-normal text-brand-700" href={`mailto:${t.email}`}>{t.email}</a>{t.phone ? <span className="font-normal text-ink-mute"> · {t.phone}</span> : null}</p>
                 <TicketStatus t={t} />
               </div>
               <p className="mt-2 whitespace-pre-wrap text-sm text-ink-soft">{t.message}</p>

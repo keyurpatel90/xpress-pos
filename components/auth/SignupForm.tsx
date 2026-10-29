@@ -39,7 +39,7 @@ export function SignupForm() {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      {error && <p role="alert" className="rounded-lg bg-chili-50 p-3 text-sm text-chili-600">{error}</p>}
+      {error && <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm text-rose-600">{error}</p>}
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Your name"><Input required autoComplete="name" value={f.full_name} onChange={set('full_name')} /></Field>
         <Field label="Mobile number"><Input required inputMode="tel" autoComplete="tel" value={f.phone} onChange={set('phone')} /></Field>
@@ -48,8 +48,8 @@ export function SignupForm() {
       <Field label="Email" hint="We will send a verification link here"><Input type="email" required autoComplete="email" value={f.email} onChange={set('email')} /></Field>
       <Field label="Password" hint="At least 8 characters"><Input type="password" required minLength={8} autoComplete="new-password" value={f.password} onChange={set('password')} /></Field>
       <label className="flex items-start gap-2 text-sm text-ink-soft">
-        <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-1 h-4 w-4 accent-pine-600" />
-        <span>I agree to the <Link href="/legal/terms" className="font-medium text-pine-700 underline">terms</Link> and <Link href="/legal/privacy" className="font-medium text-pine-700 underline">privacy policy</Link>.</span>
+        <input type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} className="mt-1 h-4 w-4 accent-brand-600" />
+        <span>I agree to the <Link href="/legal/terms" className="font-medium text-brand-700 underline">terms</Link> and <Link href="/legal/privacy" className="font-medium text-brand-700 underline">privacy policy</Link>.</span>
       </label>
       <Btn type="submit" size="lg" className="w-full" loading={busy}>Create my account</Btn>
     </form>

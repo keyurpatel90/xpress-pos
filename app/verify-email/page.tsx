@@ -11,9 +11,9 @@ export default function VerifyEmailPage({ searchParams }: { searchParams: { emai
   return (
     <AuthShell title="Check your email"
       subtitle={email ? `We sent a verification link to ${email}.` : 'We sent you a verification link.'}
-      footer={<>Already verified? <Link href="/login" className="font-semibold text-pine-700 hover:underline">Sign in</Link></>}>
+      footer={<>Already verified? <Link href="/login" className="font-semibold text-brand-700 hover:underline">Sign in</Link></>}>
       <div className="space-y-5">
-        <div className="flex gap-3 rounded-xl bg-pine-50 p-4 text-sm text-pine-800">
+        <div className="flex gap-3 rounded-xl bg-brand-50 p-4 text-sm text-brand-800">
           <Icon name="mail" className="mt-0.5 h-5 w-5 shrink-0" />
           <p>Open the email and tap the link to confirm your address. You can sign in as soon as it is verified. If you do not see it, check your spam folder.</p>
         </div>

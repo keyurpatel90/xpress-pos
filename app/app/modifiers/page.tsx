@@ -64,7 +64,7 @@ export default function ModifiersPage() {
                 {(g.modifier_options as Row[]).sort((a, b) => a.sort - b.sort).map((o) => (
                   <li key={o.id} className="flex items-center gap-1 rounded-lg bg-field px-2.5 py-1 text-sm">
                     {o.name}{Number(o.price) > 0 && <span className="text-ink-mute"> +{inr(o.price)}</span>}
-                    <button onClick={() => removeOption(o.id)} className="ml-1 text-ink-mute hover:text-chili-600" aria-label={`Remove ${o.name}`}><Icon name="x" className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => removeOption(o.id)} className="ml-1 text-ink-mute hover:text-rose-600" aria-label={`Remove ${o.name}`}><Icon name="x" className="h-3.5 w-3.5" /></button>
                   </li>
                 ))}
                 {(g.modifier_options as Row[]).length === 0 && <li className="text-sm text-ink-mute">No options yet</li>}

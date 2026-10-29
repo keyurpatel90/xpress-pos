@@ -14,7 +14,7 @@ export default function LegalPage({ params }: { params: { doc: string } }) {
   if (!d) notFound();
   return (
     <div className="mx-auto max-w-2xl px-5 py-14">
-      <h1 className="font-display text-4xl font-bold tracking-tight">{d.title}</h1>
+      <h1 className="font-display text-4xl font-extrabold tracking-tight">{d.title}</h1>
       <div className="mt-6 space-y-4 text-ink-soft">{d.body.map((p) => <p key={p}>{p}</p>)}</div>
     </div>
   );

@@ -8,7 +8,7 @@ export const metadata: Metadata = { title: 'Start your free trial' };
 export default function SignupPage() {
   return (
     <AuthShell title="Start your free trial" subtitle="Set up your restaurant in a few minutes. No card needed."
-      footer={<>Already have an account? <Link href="/login" className="font-semibold text-pine-700 hover:underline">Sign in</Link></>}>
+      footer={<>Already have an account? <Link href="/login" className="font-semibold text-brand-700 hover:underline">Sign in</Link></>}>
       <SignupForm />
     </AuthShell>
   );

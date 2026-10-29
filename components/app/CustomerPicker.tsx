@@ -29,7 +29,7 @@ export function CustomerPicker({ value, onChange }: { value: Row | null; onChang
 
   if (value) {
     return (
-      <div className="flex items-center justify-between rounded-lg bg-pine-50 px-3 py-2 text-sm">
+      <div className="flex items-center justify-between rounded-lg bg-brand-50 px-3 py-2 text-sm">
         <span className="min-w-0 truncate"><b>{value.name}</b>{value.phone ? ` · ${value.phone}` : ''}{value.loyalty_points > 0 ? ` · ${value.loyalty_points} pts` : ''}</span>
         <button onClick={() => onChange(null)} className="ml-2 text-ink-mute hover:text-ink" aria-label="Remove customer"><Icon name="x" className="h-4 w-4" /></button>
       </div>
@@ -56,7 +56,7 @@ export function CustomerPicker({ value, onChange }: { value: Row | null; onChang
           ))}
           <button
             onClick={() => { setForm({ name: /\d{5,}/.test(q) ? '' : q, phone: /\d{5,}/.test(q) ? q : '' }); setAdding(true); }}
-            className="block w-full border-t border-line px-3 py-2 text-left text-sm font-medium text-pine-700 hover:bg-field">
+            className="block w-full border-t border-line px-3 py-2 text-left text-sm font-medium text-brand-700 hover:bg-field">
             + Add “{q.trim()}” as a new customer
           </button>
         </div>

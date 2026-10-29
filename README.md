@@ -9,6 +9,17 @@ Multi-restaurant cloud POS built with **Next.js 14 (App Router) + Supabase + Raz
 - Razorpay subscriptions. A **super admin** panel decides which features need a subscription, edits plans and prices, and manages restaurants
 - No customer QR ordering (by design)
 
+## Theme
+
+The UI follows the XpressPOS look: vivid violet brand colour, Inter (heavy weights for headings, JetBrains Mono on printed slips), small uppercase slate labels, white rounded cards on a light slate background, and colour-coded statuses (green = vacant/ready/veg, rose = occupied/non-veg, amber = reserved/warning, blue = cooking).
+
+To retheme, edit two files only:
+
+- `tailwind.config.ts`: the `brand` colour scale (primary buttons, active tabs, links), `ink`/`field`/`line` neutrals and the font families.
+- `app/globals.css`: shared button, input and card styles.
+
+Status colours use Tailwind's built-in `emerald`, `rose`, `amber` and `blue` palettes.
+
 ## 1. Supabase
 
 1. Create a project at supabase.com (pick a region close to your users, e.g. Mumbai).
@@ -86,6 +97,7 @@ Owners add staff under *Staff*: either an email invitation (the person sets thei
 - `next build` (type-check and production build) passes with no errors, 36 routes.
 - `supabase/schema.sql` was run twice on PostgreSQL 16 with Supabase-style roles, and a scripted test covered: trigger-created restaurants, tenant isolation, role permissions, KOT/billing maths with GST and discounts, one open order per table, split payments, recipe stock deduction, feature gating in trial / active / expired states, and idempotent payment activation.
 - The running production server was smoke-tested for page responses, auth redirects and API error handling.
+- The marketing pages and the logged-in screens (dashboard, POS, tables, kitchen display, menu, billing, orders, bill dialog, mobile POS) were rendered in a headless browser against a mock Supabase API: no JavaScript errors, and the screens were checked visually against the reference theme.
 
 Not tested here (needs your keys and a browser): the live Supabase email flow, a real Razorpay payment, a real WhatsApp send, and on-device printing. Run one end-to-end pass of each in test mode before going live.
 

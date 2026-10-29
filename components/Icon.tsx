@@ -38,6 +38,12 @@ const P: Record<string, string> = {
   mail: 'M3 6h18v12H3zM3 7l9 6 9-6',
   external: 'M14 4h6v6M20 4l-9 9M18 14v6H4V6h6',
   bell: 'M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4',
+  chef: 'M6 14a4 4 0 0 1 .5-7.9A5 5 0 0 1 16.4 5 4.5 4.5 0 0 1 18 14M6 14v6h12v-6M6 17h12',
+  checkc: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM8 12l3 3 5-6',
+  send: 'M21 3L10 14M21 3l-7 18-4-7-7-4z',
+  layers: 'M12 3l9 5-9 5-9-5zM3 13l9 5 9-5',
+  grid: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+  sparkle: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z',
   shield: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z',
 };
 

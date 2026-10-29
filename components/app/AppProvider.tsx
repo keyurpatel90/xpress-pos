@@ -13,6 +13,7 @@ type Ctx = {
   restaurant: Row;
   role: Role;
   email: string;
+  verified: boolean;
   has: (feature: string) => boolean;
   refresh: () => Promise<void>;
   print: (node: ReactNode) => void;
@@ -29,7 +30,7 @@ export const useApp = () => {
 export const useToast = () => useContext(ToastCtx);
 
 export function AppProvider({ initial, children }: {
-  initial: { access: Access; profile: Row; restaurant: Row; email: string };
+  initial: { access: Access; profile: Row; restaurant: Row; email: string; verified: boolean };
   children: ReactNode;
 }) {
   const [access, setAccess] = useState<Access>(initial.access);
@@ -71,10 +72,10 @@ export function AppProvider({ initial, children }: {
   }, []);
 
   const value = useMemo<Ctx>(() => ({
-    access, restaurant, profile: initial.profile, role: access.role as Role, email: initial.email,
+    access, restaurant, profile: initial.profile, role: access.role as Role, email: initial.email, verified: initial.verified,
     has: (f) => access.features?.[f] !== false,
     refresh, print,
-  }), [access, restaurant, initial.profile, initial.email, refresh, print]);
+  }), [access, restaurant, initial.profile, initial.email, initial.verified, refresh, print]);
 
   return (
     <ToastCtx.Provider value={toast}>
@@ -84,7 +85,7 @@ export function AppProvider({ initial, children }: {
           {toasts.map((t) => (
             <div key={t.id} role="status" className={cn(
               'pointer-events-auto max-w-md rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-lift',
-              t.type === 'error' ? 'bg-chili-600' : t.type === 'success' ? 'bg-pine-700' : 'bg-ink')}>
+              t.type === 'error' ? 'bg-rose-600' : t.type === 'success' ? 'bg-emerald-600' : 'bg-ink')}>
               {t.message}
             </div>
           ))}

@@ -106,8 +106,8 @@ export default function MenuPage() {
           <nav className="card h-fit p-2">
             {([{ id: 'all', name: 'All items', n: items.length } as Row, ...cats.map((c): Row => ({ ...c, n: items.filter((i) => i.category_id === c.id).length })),
               ...(items.some((i) => !i.category_id) ? [{ id: 'none', name: 'Uncategorised', n: items.filter((i) => !i.category_id).length } as Row] : [])] as Row[]).map((c) => (
-              <div key={c.id} className={cn('flex items-center rounded-lg', catId === c.id ? 'bg-pine-50' : 'hover:bg-field')}>
-                <button onClick={() => setCatId(c.id)} className={cn('flex-1 px-3 py-2 text-left text-sm font-medium', catId === c.id ? 'text-pine-700' : 'text-ink-soft')}>
+              <div key={c.id} className={cn('flex items-center rounded-lg', catId === c.id ? 'bg-brand-50' : 'hover:bg-field')}>
+                <button onClick={() => setCatId(c.id)} className={cn('flex-1 px-3 py-2 text-left text-sm font-medium', catId === c.id ? 'text-brand-700' : 'text-ink-soft')}>
                   {c.name} <span className="text-xs text-ink-mute">{c.n}</span>{c.is_active === false && <Badge className="ml-1">Hidden</Badge>}
                 </button>
                 {canEdit && c.id !== 'all' && c.id !== 'none' && <button onClick={() => setCat({ ...c })} className="p-2 text-ink-mute hover:text-ink" aria-label={`Edit ${c.name}`}><Icon name="edit" className="h-4 w-4" /></button>}
@@ -122,7 +122,7 @@ export default function MenuPage() {
                   <tr key={i.id}>
                     <td className="px-4 py-2.5">
                       <span className="flex items-center gap-2 font-medium">
-                        <span className={cn('inline-block h-2.5 w-2.5 rounded-full', i.is_veg ? 'bg-pine-600' : 'bg-chili-500')} />{i.name}
+                        <span className={cn('inline-block h-2.5 w-2.5 rounded-full', i.is_veg ? 'bg-emerald-600' : 'bg-rose-500')} />{i.name}
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-ink-soft">{catName(i.category_id)}</td>
@@ -133,7 +133,7 @@ export default function MenuPage() {
                     <td className="whitespace-nowrap px-4 py-2.5 text-right">
                       {canEdit && <>
                         <button onClick={() => openItem(i)} className="p-1.5 text-ink-mute hover:text-ink" aria-label={`Edit ${i.name}`}><Icon name="edit" className="h-4 w-4" /></button>
-                        <button onClick={() => removeItem(i)} className="p-1.5 text-ink-mute hover:text-chili-600" aria-label={`Delete ${i.name}`}><Icon name="trash" className="h-4 w-4" /></button>
+                        <button onClick={() => removeItem(i)} className="p-1.5 text-ink-mute hover:text-rose-600" aria-label={`Delete ${i.name}`}><Icon name="trash" className="h-4 w-4" /></button>
                       </>}
                     </td>
                   </tr>
@@ -176,7 +176,7 @@ export default function MenuPage() {
                     const on = gsel.includes(g.id);
                     return (
                       <button key={g.id} type="button" onClick={() => setGsel(on ? gsel.filter((x) => x !== g.id) : [...gsel, g.id])}
-                        className={cn('rounded-lg border px-3 py-1.5 text-sm font-medium', on ? 'border-pine-600 bg-pine-600 text-white' : 'border-line hover:bg-field')}>{g.name}</button>
+                        className={cn('rounded-lg border px-3 py-1.5 text-sm font-medium', on ? 'border-brand-600 bg-brand-600 text-white' : 'border-line hover:bg-field')}>{g.name}</button>
                     );
                   })}
                 </div>

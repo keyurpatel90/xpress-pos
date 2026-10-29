@@ -52,10 +52,17 @@ export default function TablesPage() {
 
   if (loading) return <Loading />;
   const sections = Array.from(new Set(data.tables.map((t) => t.section)));
+  const isBusy = (t: Row) => data.orders.some((x) => x.table_id === t.id) || t.status === 'occupied';
+  const nBusy = data.tables.filter(isBusy).length;
+  const nReserved = data.tables.filter((t) => !isBusy(t) && t.status === 'reserved').length;
+  const nFree = data.tables.length - nBusy - nReserved;
 
   return (
     <>
-      <PageHeader title="Tables" subtitle="Tap a table to open its order" />
+      <PageHeader title="Tables" subtitle="Tap a table to open its order"
+        actions={data.tables.length > 0 && <>
+          <Badge tone="green">Vacant ({nFree})</Badge><Badge tone="red">Occupied ({nBusy})</Badge><Badge tone="yellow">Reserved ({nReserved})</Badge>
+        </>} />
       {isOwner && (
         <Card className="mb-5 p-4">
           <p className="font-display font-semibold">Add tables</p>
@@ -73,26 +80,27 @@ export default function TablesPage() {
         <Empty icon="table" title="No tables yet" text={isOwner ? 'Add your tables above. You can rename them or change seats afterwards.' : 'Ask the owner to add tables.'} />
       ) : sections.map((s) => (
         <section key={s} className="mb-6">
-          <h2 className="mb-2 font-display text-lg font-semibold">{s}</h2>
+          <h2 className="label-caps mb-2.5">{s}</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
             {data.tables.filter((t) => t.section === s).map((t) => {
               const o = data.orders.find((x) => x.table_id === t.id);
-              const busy = !!o || t.status === 'occupied';
+              const busy = isBusy(t);
               return (
                 <div key={t.id} role="button" tabIndex={0} onClick={() => router.push(`/app/pos?table=${t.id}`)}
                   onKeyDown={(e) => e.key === 'Enter' && router.push(`/app/pos?table=${t.id}`)}
-                  className={cn('relative cursor-pointer rounded-xl border p-3 transition-shadow hover:shadow-lift',
-                    busy ? 'border-turmeric-400 bg-turmeric-50' : t.status === 'reserved' ? 'border-line bg-field' : 'border-line bg-white')}>
+                  className={cn('relative cursor-pointer rounded-xl border-2 bg-white p-3.5 transition-all hover:-translate-y-0.5 hover:shadow-lift',
+                    busy ? 'border-rose-300' : t.status === 'reserved' ? 'border-amber-300' : 'border-emerald-300')}>
                   <div className="flex items-start justify-between">
-                    <p className="font-display text-xl font-bold">{t.name}</p>
+                    <p className="font-display text-xl font-extrabold">{t.name}</p>
                     {isOwner && (
                       <button onClick={(e) => { e.stopPropagation(); setEdit(t); }} className="rounded-md p-1 text-ink-mute hover:bg-white" aria-label={`Edit ${t.name}`}><Icon name="edit" className="h-4 w-4" /></button>
                     )}
                   </div>
                   <p className="text-xs text-ink-mute">{t.seats} seats</p>
                   <div className="mt-2">
-                    {o ? <><Badge tone="yellow">Order #{o.order_no}</Badge><p className="mt-1 text-sm font-semibold">{inr(o.total)}<span className="ml-1 text-xs font-normal text-ink-mute">{minutesSince(o.created_at)} min</span></p></>
-                      : <Badge tone={t.status === 'reserved' ? 'gray' : 'green'}>{t.status === 'reserved' ? 'Reserved' : 'Free'}</Badge>}
+                    {o ? <><Badge tone="red">Occupied</Badge><p className="mt-1.5 text-xs font-semibold text-ink-soft">Order #{o.order_no}</p><p className="font-display text-base font-extrabold text-brand-600">{inr(o.total)}<span className="ml-1.5 text-xs font-medium text-ink-mute">{minutesSince(o.created_at)} min</span></p></>
+                      : busy ? <Badge tone="red">Occupied</Badge>
+                      : <Badge tone={t.status === 'reserved' ? 'yellow' : 'green'}>{t.status === 'reserved' ? 'Reserved' : 'Vacant'}</Badge>}
                   </div>
                 </div>
               );

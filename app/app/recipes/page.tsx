@@ -65,7 +65,7 @@ export default function RecipesPage() {
               {list.map((m) => {
                 const c = costs[m.id] ?? 0;
                 return (
-                  <button key={m.id} onClick={() => pick(m.id)} className={cn('flex w-full items-center justify-between px-3 py-2.5 text-left text-sm hover:bg-field', sel === m.id && 'bg-pine-50')}>
+                  <button key={m.id} onClick={() => pick(m.id)} className={cn('flex w-full items-center justify-between px-3 py-2.5 text-left text-sm hover:bg-field', sel === m.id && 'bg-brand-50')}>
                     <span className="font-medium">{m.name}</span>
                     <span className="text-xs text-ink-mute">{c > 0 ? `cost ${inr(c, 2)} · ${Math.round(((Number(m.price) - c) / Number(m.price)) * 100)}%` : 'no recipe'}</span>
                   </button>
@@ -101,7 +101,7 @@ export default function RecipesPage() {
               <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-line pt-4 text-sm">
                 <div><dt className="text-ink-mute">Food cost</dt><dd className="font-display text-xl font-bold">{inr(cost, 2)}</dd></div>
                 <div><dt className="text-ink-mute">Selling price</dt><dd className="font-display text-xl font-bold">{inr(item.price, 2)}</dd></div>
-                <div><dt className="text-ink-mute">Margin</dt><dd className={cn('font-display text-xl font-bold', margin < 0 && 'text-chili-600')}>{inr(margin, 2)} <span className="text-sm font-medium text-ink-mute">({Number(item.price) > 0 ? Math.round((margin / Number(item.price)) * 100) : 0}%)</span></dd></div>
+                <div><dt className="text-ink-mute">Margin</dt><dd className={cn('font-display text-xl font-bold', margin < 0 && 'text-rose-600')}>{inr(margin, 2)} <span className="text-sm font-medium text-ink-mute">({Number(item.price) > 0 ? Math.round((margin / Number(item.price)) * 100) : 0}%)</span></dd></div>
               </dl>
             </Card>
           ) : <Empty icon="book" title="Pick a dish" text="Choose a dish on the left to build or edit its recipe." />}
