@@ -27,8 +27,10 @@ export default function OrdersPage() {
       .eq('restaurant_id', restaurant.id as string)
       .order('created_at', { ascending: false });
     if (date) {
-      const from = new Date(`${date}T00:00:00`);
-      const to = new Date(from.getTime() + 86400000);
+      // Orders are displayed in India time while Supabase stores created_at as UTC.
+      const from = new Date(`${date}T00:00:00+05:30`);
+      const to = new Date(`${date}T00:00:00+05:30`);
+      to.setUTCDate(to.getUTCDate() + 1);
       query = query.gte('created_at', from.toISOString()).lt('created_at', to.toISOString());
     }
     return unwrap(await query) ?? [];
