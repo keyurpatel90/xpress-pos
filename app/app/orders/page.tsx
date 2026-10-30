@@ -7,7 +7,7 @@ import { Invoice } from '@/components/app/Invoice';
 import { SendWhatsApp } from '@/components/app/SendWhatsApp';
 import { Badge, Btn, Empty, Input, Loading, Modal, PageHeader, Select, Table } from '@/components/ui';
 import { Icon } from '@/components/Icon';
-import { fmtDate, inr, isoDate, typeLabel } from '@/lib/utils';
+import { fmtDate, inr, typeLabel } from '@/lib/utils';
 import type { Row } from '@/lib/types';
 
 const TONE: Record<string, 'green' | 'yellow' | 'red'> = { paid: 'green', open: 'yellow', cancelled: 'red' };
@@ -16,18 +16,23 @@ export default function OrdersPage() {
   const { role, restaurant, print } = useApp();
   const sb = useSupabase();
   const act = useAction();
-  const [date, setDate] = useState(isoDate());
+  const [date, setDate] = useState('');
   const [status, setStatus] = useState('all');
   const [q, setQ] = useState('');
   const [sel, setSel] = useState<Row | null>(null);
   const [detail, setDetail] = useState<{ items: Row[]; payments: Row[] }>({ items: [], payments: [] });
 
   const { data: orders, loading, reload } = useData<Row[]>(async (c) => {
-    const from = new Date(date + 'T00:00:00');
-    const to = new Date(from.getTime() + 86400000);
-    return unwrap(await c.from('orders').select('*, dining_tables(name)')
-      .gte('created_at', from.toISOString()).lt('created_at', to.toISOString()).order('created_at', { ascending: false })) ?? [];
-  }, [], [date]);
+    let query = c.from('orders').select('*, dining_tables(name)')
+      .eq('restaurant_id', restaurant.id as string)
+      .order('created_at', { ascending: false });
+    if (date) {
+      const from = new Date(`${date}T00:00:00`);
+      const to = new Date(from.getTime() + 86400000);
+      query = query.gte('created_at', from.toISOString()).lt('created_at', to.toISOString());
+    }
+    return unwrap(await query) ?? [];
+  }, [], [date, restaurant.id]);
 
   async function openOrder(o: Row) {
     setSel(o);
