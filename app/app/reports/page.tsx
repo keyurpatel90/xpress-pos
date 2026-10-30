@@ -4,6 +4,7 @@ import { unwrap, useData } from '@/lib/hooks';
 import { BarChart } from '@/components/BarChart';
 import { Btn, Card, Input, Loading, PageHeader, Segmented, Stat } from '@/components/ui';
 import { Icon } from '@/components/Icon';
+import { GstReconciliation } from '@/components/reports/GstReconciliation';
 import { inr, isoDate, typeLabel } from '@/lib/utils';
 import type { Row } from '@/lib/types';
 
@@ -78,6 +79,7 @@ export default function ReportsPage() {
               {(r.top_items ?? []).length === 0 && <li className="py-2 text-ink-mute">No data</li>}
             </ul>
           </Card>
+          <GstReconciliation />
         </>
       )}
     </>
