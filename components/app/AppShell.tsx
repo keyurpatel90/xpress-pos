@@ -1,7 +1,8 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, useTransition, type ReactNode } from 'react';
+import LinearProgress from '@mui/material/LinearProgress';
 import { createClient } from '@/lib/supabase/client';
 import { NAV, ROLE_LABEL, landingFor, navFor } from '@/lib/roles';
 import { useApp } from '@/components/app/AppProvider';
@@ -34,11 +35,31 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const [progress, setProgress] = useState(0);
 
   const current = navFor(pathname);
   const notAllowed = !!current && !current.roles.includes(role);
   useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    if (isPending) {
+      setProgress((value) => Math.max(value, 18));
+      const timer = window.setInterval(() => setProgress((value) => Math.min(value + 8, 88)), 180);
+      return () => window.clearInterval(timer);
+    }
+    if (progress > 0) {
+      setProgress(100);
+      const timer = window.setTimeout(() => setProgress(0), 220);
+      return () => window.clearTimeout(timer);
+    }
+  }, [isPending, progress]);
   useEffect(() => { if (notAllowed) router.replace(landingFor(role, false)); }, [notAllowed, role, router]);
+
+  const navigate = (href: string) => {
+    setOpen(false);
+    setProgress(18);
+    startTransition(() => router.push(href));
+  };
 
   const onBilling = pathname.startsWith('/app/billing') || pathname.startsWith('/app/settings');
   const lockedOut = access.locked && !(role === 'owner' && onBilling);
@@ -66,7 +87,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="flex h-dvh overflow-hidden">
+    <div className="relative flex h-dvh overflow-hidden">
+      {progress > 0 && <LinearProgress variant="determinate" value={progress} color="secondary" className="absolute inset-x-0 top-0 z-50 h-1" />}
       {open && <div className="fixed inset-0 z-30 bg-ink/40 lg:hidden" onClick={() => setOpen(false)} />}
       <aside className={cn(
         'fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-line bg-white transition-transform lg:static lg:translate-x-0',
@@ -84,7 +106,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             const active = n.href === '/app' ? pathname === '/app' : pathname.startsWith(n.href);
             const locked = !!n.feature && !has(n.feature);
             return (
-              <Link key={n.href} href={n.href}
+              <Link key={n.href} href={n.href} onClick={(event) => { event.preventDefault(); if (n.href !== pathname) navigate(n.href); }}
                 className={cn('flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors',
                   active ? 'bg-brand-600 text-white shadow-sm' : 'text-ink-soft hover:bg-slate-100')}>
                 <Icon name={n.icon} className="h-[18px] w-[18px]" />
@@ -94,7 +116,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
           {access.is_super_admin && (
-            <Link href="/admin" className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-soft hover:bg-field">
+            <Link href="/admin" onClick={(event) => { event.preventDefault(); navigate('/admin'); }} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-soft hover:bg-field">
               <Icon name="shield" className="h-[18px] w-[18px]" /> Super admin
             </Link>
           )}

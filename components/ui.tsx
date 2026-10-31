@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import Skeleton from '@mui/material/Skeleton';
 import { btnClass, cn } from '@/lib/utils';
 import { Icon } from '@/components/Icon';
 
@@ -143,7 +144,14 @@ export function Empty({ icon = 'box', title, text, action }: { icon?: string; ti
 }
 
 export function Loading() {
-  return <div className="flex justify-center py-16 text-brand-600"><Spinner className="h-7 w-7" /></div>;
+  return (
+    <div className="flex flex-col gap-5" aria-label="Loading content" role="status">
+      <div className="grid gap-4 sm:grid-cols-3">
+        {[1, 2, 3].map((item) => <Skeleton key={item} variant="rounded" height={92} animation="wave" />)}
+      </div>
+      <Skeleton variant="rounded" height={320} animation="wave" />
+    </div>
+  );
 }
 
 export function Stat({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: string; tone?: 'warn' }) {
