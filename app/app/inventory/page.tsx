@@ -6,6 +6,7 @@ import { Badge, Btn, Empty, Field, Input, Loading, Modal, PageHeader, Segmented,
 import { Icon } from '@/components/Icon';
 import { INV_UNITS, fmtDate, inr } from '@/lib/utils';
 import type { Row } from '@/lib/types';
+import { InventoryOperations } from '@/components/inventory/InventoryOperations';
 
 const REASONS: Record<string, string> = { purchase: 'Purchase', wastage: 'Wastage', correction: 'Correction', opening: 'Opening stock', sale: 'Used in orders', cancel: 'Order cancelled' };
 
@@ -134,6 +135,7 @@ export default function InventoryPage() {
           </ul>
         ))}
       </Modal>
+      <InventoryOperations />
     </>
   );
 }

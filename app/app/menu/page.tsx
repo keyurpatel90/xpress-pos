@@ -6,6 +6,7 @@ import { Badge, Btn, Empty, Field, Input, Loading, Modal, PageHeader, Select, Ta
 import { Icon } from '@/components/Icon';
 import { UNITS, cn, inr } from '@/lib/utils';
 import type { Row } from '@/lib/types';
+import { AdvancedMenu } from '@/components/menu/AdvancedMenu';
 
 const blankItem = (catId: string): Row => ({
   id: null, name: '', category_id: catId !== 'all' && catId !== 'none' ? catId : '', price: '', is_veg: true,
@@ -196,6 +197,7 @@ export default function MenuPage() {
           </div>
         )}
       </Modal>
+      <AdvancedMenu />
     </>
   );
 }
