@@ -4,6 +4,28 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/app/AppProvider';
 
+const apiLoadingListeners = new Set<(loading: boolean) => void>();
+let activeApiRequests = 0;
+
+function setApiLoading(loading: boolean) {
+  apiLoadingListeners.forEach((listener) => listener(loading));
+}
+
+function beginApiRequest() {
+  activeApiRequests += 1;
+  if (activeApiRequests === 1) setApiLoading(true);
+}
+
+function endApiRequest() {
+  activeApiRequests = Math.max(0, activeApiRequests - 1);
+  if (activeApiRequests === 0) setApiLoading(false);
+}
+
+export function subscribeApiLoading(listener: (loading: boolean) => void) {
+  apiLoadingListeners.add(listener);
+  return () => apiLoadingListeners.delete(listener);
+}
+
 export function useSupabase() {
   return useMemo(() => createClient(), []);
 }
@@ -22,12 +44,14 @@ export function useData<T>(loader: (sb: SupabaseClient) => PromiseLike<T>, initi
   const loaderRef = useRef(loader);
   loaderRef.current = loader;
   const reload = useCallback(async () => {
+    beginApiRequest();
     try {
       setData(await loaderRef.current(sb));
     } catch (e) {
       toast((e as Error).message, 'error');
     } finally {
       setLoading(false);
+      endApiRequest();
     }
   }, [sb, toast]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -47,6 +71,7 @@ export function useAction() {
   const toast = useToast();
   return useCallback(
     async <T,>(fn: () => PromiseLike<T>, ok?: string): Promise<T | undefined> => {
+      beginApiRequest();
       try {
         const r = await fn();
         if (ok) toast(ok, 'success');
@@ -54,6 +79,8 @@ export function useAction() {
       } catch (e) {
         toast(friendly((e as Error).message || 'Something went wrong'), 'error');
         return undefined;
+      } finally {
+        endApiRequest();
       }
     },
     [toast]
@@ -61,12 +88,17 @@ export function useAction() {
 }
 
 export async function api<T = Record<string, unknown>>(url: string, method: string, body?: unknown): Promise<T> {
-  const res = await fetch(url, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((json as { error?: string }).error || `Request failed (${res.status})`);
-  return json as T;
+  beginApiRequest();
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error((json as { error?: string }).error || `Request failed (${res.status})`);
+    return json as T;
+  } finally {
+    endApiRequest();
+  }
 }
