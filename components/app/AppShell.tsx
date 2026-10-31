@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState, useTransition, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import LinearProgress from '@mui/material/LinearProgress';
 import { createClient } from '@/lib/supabase/client';
 import { NAV, ROLE_LABEL, landingFor, navFor } from '@/lib/roles';
@@ -36,36 +36,45 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
   const [apiPending, setApiPending] = useState(false);
   const [progress, setProgress] = useState(0);
+  const progressRef = useRef(0);
+
+  const updateProgress = (value: number) => {
+    progressRef.current = value;
+    setProgress(value);
+  };
 
   const current = navFor(pathname);
   const notAllowed = !!current && !current.roles.includes(role);
-  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    setOpen(false);
+    if (!apiPending && progressRef.current > 0) {
+      updateProgress(100);
+      const timer = window.setTimeout(() => updateProgress(0), 220);
+      return () => window.clearTimeout(timer);
+    }
+  }, [pathname, apiPending]);
   useEffect(() => {
     const unsubscribe = subscribeApiLoading(setApiPending);
     return () => { unsubscribe(); };
   }, []);
   useEffect(() => {
-    if (isPending || apiPending) {
-      setProgress((value) => Math.max(value, 18));
-      const timer = window.setInterval(() => setProgress((value) => Math.min(value + 8, 88)), 180);
+    const busy = apiPending;
+    if (busy) {
+      updateProgress(Math.max(progressRef.current, 18));
+      const timer = window.setInterval(() => {
+        updateProgress(Math.min(progressRef.current + 8, 88));
+      }, 180);
       return () => window.clearInterval(timer);
     }
-    if (progress > 0) {
-      setProgress(100);
-      const timer = window.setTimeout(() => setProgress(0), 220);
+    if (progressRef.current > 0) {
+      updateProgress(100);
+      const timer = window.setTimeout(() => updateProgress(0), 220);
       return () => window.clearTimeout(timer);
     }
-  }, [apiPending, isPending, progress]);
+  }, [apiPending]);
   useEffect(() => { if (notAllowed) router.replace(landingFor(role, false)); }, [notAllowed, role, router]);
-
-  const navigate = (href: string) => {
-    setOpen(false);
-    setProgress(18);
-    startTransition(() => router.push(href));
-  };
 
   const onBilling = pathname.startsWith('/app/billing') || pathname.startsWith('/app/settings');
   const lockedOut = access.locked && !(role === 'owner' && onBilling);
@@ -112,7 +121,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             const active = n.href === '/app' ? pathname === '/app' : pathname.startsWith(n.href);
             const locked = !!n.feature && !has(n.feature);
             return (
-              <Link key={n.href} href={n.href} onClick={(event) => { event.preventDefault(); if (n.href !== pathname) navigate(n.href); }}
+              <Link key={n.href} href={n.href} onClick={() => { if (n.href !== pathname) { setOpen(false); updateProgress(18); } }}
                 className={cn('flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors',
                   active ? 'bg-brand-600 text-white shadow-sm' : 'text-ink-soft hover:bg-slate-100')}>
                 <Icon name={n.icon} className="h-[18px] w-[18px]" />
@@ -122,7 +131,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
           {access.is_super_admin && (
-            <Link href="/admin" onClick={(event) => { event.preventDefault(); navigate('/admin'); }} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-soft hover:bg-field">
+            <Link href="/admin" onClick={() => { setOpen(false); updateProgress(18); }} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-soft hover:bg-field">
               <Icon name="shield" className="h-[18px] w-[18px]" /> Super admin
             </Link>
           )}
