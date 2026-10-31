@@ -48,7 +48,7 @@ export default function RecipesPage() {
     if (ok) reload();
   }
 
-  if (loading) return <Loading />;
+  if (loading) return <Loading variant="list" />;
   const item = (data.menu as Row[]).find((m) => m.id === sel);
   const cost = costOf(rows);
   const margin = item ? Number(item.price) - cost : 0;

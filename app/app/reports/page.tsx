@@ -44,7 +44,7 @@ export default function ReportsPage() {
           <Input type="date" className="w-40" value={to} onChange={(e) => setTo(e.target.value)} />
         </>}
       </div>
-      {loading ? <Loading /> : (
+      {loading ? <Loading variant="report" /> : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <Stat label="Sales" value={inr(t.total)} />

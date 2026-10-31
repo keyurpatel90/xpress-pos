@@ -64,7 +64,7 @@ export default function OrdersPage() {
         </Select></div>
         <Input className="w-56" placeholder="Search order, bill or customer" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
-      {loading ? <Loading /> : rows.length === 0 ? <Empty icon="receipt" title="No orders found" text="Try another date or status." /> : (
+      {loading ? <Loading variant="list" /> : rows.length === 0 ? <Empty icon="receipt" title="No orders found" text="Try another date or status." /> : (
         <Table head={['Order', 'Time', 'Type', 'Customer', 'Total', 'Status']}>
           {rows.map((o) => (
             <tr key={o.id} onClick={() => openOrder(o)} className="cursor-pointer hover:bg-field/60">

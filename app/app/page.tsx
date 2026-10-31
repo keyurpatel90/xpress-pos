@@ -19,7 +19,7 @@ export default function Dashboard() {
   }, [reload]);
 
   if (role !== 'owner') return null;
-  if (loading) return <Loading />;
+  if (loading) return <Loading variant="dashboard" />;
 
   const steps = [
     { done: d.tables_total > 0, label: 'Add your tables', href: '/app/tables' },

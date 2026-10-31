@@ -36,7 +36,7 @@ export function SetPasswordForm() {
     router.refresh();
   }
 
-  if (state === 'checking') return <Loading />;
+  if (state === 'checking') return <Loading variant="auth" />;
   if (state === 'none') {
     return <p className="rounded-lg bg-rose-50 p-4 text-sm text-rose-600">This link has expired or was already used. <Link href="/forgot-password" className="font-semibold underline">Request a new one</Link> or ask your restaurant owner to resend your invitation.</p>;
   }

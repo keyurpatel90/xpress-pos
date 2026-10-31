@@ -15,7 +15,7 @@ type Line = { key: string; item: Row; qty: number; notes: string; mods: Row[] };
 const STATUS_TONE: Record<string, 'gray' | 'yellow' | 'green' | 'dark'> = { new: 'gray', preparing: 'yellow', ready: 'green', served: 'dark' };
 
 export default function PosPage() {
-  return <Suspense fallback={<Loading />}><Pos /></Suspense>;
+  return <Suspense fallback={<Loading variant="pos" />}><Pos /></Suspense>;
 }
 
 function Pos() {
@@ -162,7 +162,7 @@ function Pos() {
   const items = (cat.items as Row[]).filter((i) =>
     (catId === 'all' || i.category_id === catId) && (!vegOnly || i.is_veg) && (!q || i.name.toLowerCase().includes(q.toLowerCase())));
 
-  if (loading) return <Loading />;
+  if (loading) return <Loading variant="pos" />;
   const noMenu = (cat.items as Row[]).length === 0;
 
   return (

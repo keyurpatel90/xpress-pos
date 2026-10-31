@@ -94,7 +94,7 @@ export default function KdsPage() {
     reload();
   }
 
-  if (loading) return <Loading />;
+  if (loading) return <Loading variant="table" />;
   const canFull = typeof document !== 'undefined' && !!document.documentElement.requestFullscreen;
   const autoPrint = !!restaurant.auto_print_kot;
 

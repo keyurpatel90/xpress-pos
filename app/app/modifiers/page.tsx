@@ -42,7 +42,7 @@ export default function ModifiersPage() {
     reload();
   }
 
-  if (loading) return <Loading />;
+  if (loading) return <Loading variant="list" />;
   return (
     <>
       <PageHeader title="Modifiers" subtitle="Add-ons and choices that appear when you tap a dish. Attach groups to dishes from the Menu page."

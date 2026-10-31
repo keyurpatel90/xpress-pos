@@ -26,7 +26,7 @@ export default function StaffPage() {
     if (await act(() => api('/api/staff', 'DELETE', { id: s.id }), 'Staff removed')) reload();
   }
 
-  if (loading) return <Loading />;
+  if (loading) return <Loading variant="list" />;
   return (
     <>
       <PageHeader title="Staff" subtitle="Each person signs in with their own login and lands on the screen for their job"

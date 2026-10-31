@@ -64,7 +64,7 @@ export default function BillingPage() {
     }
   }
 
-  if (loading) return <Loading />;
+  if (loading) return <Loading variant="report" />;
   const label = (p: Row) => {
     if (access.status !== 'active') return 'Subscribe';
     if (access.plan_id === p.id) return 'Renew';
