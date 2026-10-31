@@ -39,7 +39,7 @@ export default function CustomersPage() {
     setEdit(null); reload();
   }
 
-  if (loading) return <Loading />;
+  if (loading) return <Loading variant="list" />;
   const rows = list.filter((c) => !q || c.name.toLowerCase().includes(q.toLowerCase()) || (c.phone ?? '').includes(q));
   const showPoints = has('loyalty') && restaurant.loyalty_enabled;
 

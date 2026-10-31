@@ -86,7 +86,7 @@ export default function MenuPage() {
     reload();
   }
 
-  if (loading) return <Loading />;
+  if (loading) return <Loading variant="list" />;
   const shown = items.filter((i) =>
     (catId === 'all' || (catId === 'none' ? !i.category_id : i.category_id === catId)) && (!q || i.name.toLowerCase().includes(q.toLowerCase())));
   const catName = (id: string | null) => cats.find((c) => c.id === id)?.name ?? '-';

@@ -56,7 +56,7 @@ export default function InventoryPage() {
     setHist({ item, rows: (data as Row[]) ?? [] });
   }
 
-  if (loading) return <Loading />;
+  if (loading) return <Loading variant="table" />;
   const rows = items.filter((i) => (!q || i.name.toLowerCase().includes(q.toLowerCase())) && (!lowOnly || isLow(i)));
 
   return (

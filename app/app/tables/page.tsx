@@ -50,7 +50,7 @@ export default function TablesPage() {
     if (ok) { setEdit(null); reload(); }
   }
 
-  if (loading) return <Loading />;
+  if (loading) return <Loading variant="table" />;
   const sections = Array.from(new Set(data.tables.map((t) => t.section)));
   const isBusy = (t: Row) => data.orders.some((x) => x.table_id === t.id) || t.status === 'occupied';
   const nBusy = data.tables.filter(isBusy).length;

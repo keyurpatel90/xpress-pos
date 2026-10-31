@@ -143,13 +143,22 @@ export function Empty({ icon = 'box', title, text, action }: { icon?: string; ti
   );
 }
 
-export function Loading() {
+type LoadingVariant = 'dashboard' | 'pos' | 'table' | 'list' | 'report' | 'auth';
+
+export function Loading({ variant = 'list' }: { variant?: LoadingVariant }) {
+  const card = (key: string, className = 'h-24') => <Skeleton key={key} variant="rounded" className={className} animation="wave" />;
+
   return (
     <div className="flex flex-col gap-5" aria-label="Loading content" role="status">
-      <div className="grid gap-4 sm:grid-cols-3">
-        {[1, 2, 3].map((item) => <Skeleton key={item} variant="rounded" height={92} animation="wave" />)}
-      </div>
-      <Skeleton variant="rounded" height={320} animation="wave" />
+      {variant === 'dashboard' && <>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{['sales', 'bills', 'open', 'stock'].map((key) => card(key))}</div>
+        <div className="grid gap-4 lg:grid-cols-3"><Skeleton variant="rounded" className="h-80 lg:col-span-2" animation="wave" />{card('sellers', 'h-80')}</div>
+      </>}
+      {variant === 'pos' && <div className="grid min-h-[520px] gap-3 lg:grid-cols-[1fr_400px]"><Skeleton variant="rounded" className="h-[520px]" animation="wave" /><Skeleton variant="rounded" className="h-[520px]" animation="wave" /></div>}
+      {variant === 'table' && <><div className="grid gap-3 sm:grid-cols-3">{['free', 'busy', 'reserved'].map((key) => card(key, 'h-20'))}</div><Skeleton variant="rounded" className="h-96" animation="wave" /></>}
+      {variant === 'report' && <><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{['sales', 'bills', 'discount', 'tax'].map((key) => card(key, 'h-20'))}</div><Skeleton variant="rounded" className="h-72" animation="wave" /><Skeleton variant="rounded" className="h-56" animation="wave" /></>}
+      {variant === 'auth' && <div className="mx-auto w-full max-w-md"><Skeleton variant="rounded" className="h-80" animation="wave" /></div>}
+      {variant === 'list' && <><Skeleton variant="rounded" className="h-20" animation="wave" /><Skeleton variant="rounded" className="h-96" animation="wave" /></>}
     </div>
   );
 }
