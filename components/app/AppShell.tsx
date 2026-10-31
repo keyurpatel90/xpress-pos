@@ -12,6 +12,7 @@ import { Logo } from '@/components/Logo';
 import { Badge, LinkBtn } from '@/components/ui';
 import { HelpFab } from '@/components/HelpFab';
 import { cn } from '@/lib/utils';
+import { subscribeApiLoading } from '@/lib/hooks';
 
 async function signOut() {
   await createClient().auth.signOut();
@@ -36,13 +37,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [apiPending, setApiPending] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const current = navFor(pathname);
   const notAllowed = !!current && !current.roles.includes(role);
   useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {
-    if (isPending) {
+    const unsubscribe = subscribeApiLoading(setApiPending);
+    return () => { unsubscribe(); };
+  }, []);
+  useEffect(() => {
+    if (isPending || apiPending) {
       setProgress((value) => Math.max(value, 18));
       const timer = window.setInterval(() => setProgress((value) => Math.min(value + 8, 88)), 180);
       return () => window.clearInterval(timer);
@@ -52,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       const timer = window.setTimeout(() => setProgress(0), 220);
       return () => window.clearTimeout(timer);
     }
-  }, [isPending, progress]);
+  }, [apiPending, isPending, progress]);
   useEffect(() => { if (notAllowed) router.replace(landingFor(role, false)); }, [notAllowed, role, router]);
 
   const navigate = (href: string) => {
