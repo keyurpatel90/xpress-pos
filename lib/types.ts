@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Row = Record<string, any>;
 
-export type Role = 'owner' | 'cashier' | 'waiter' | 'chef' | 'kds';
+export type Role = 'owner' | 'area_manager' | 'cashier' | 'waiter' | 'chef' | 'kds';
 
 export type Access = {
   restaurant_id: string | null;

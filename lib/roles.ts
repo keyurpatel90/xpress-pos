@@ -1,10 +1,11 @@
 import type { Role } from './types';
 
 export const ROLE_LABEL: Record<Role, string> = {
-  owner: 'Owner', cashier: 'Cashier', waiter: 'Waiter', chef: 'Chef', kds: 'Kitchen display',
+  owner: 'Owner', area_manager: 'Area manager', cashier: 'Cashier', waiter: 'Waiter', chef: 'Chef', kds: 'Kitchen display',
 };
 export const ROLE_HELP: Record<Role, string> = {
   owner: 'Full access to setup, reports and billing',
+  area_manager: 'Manage assigned outlets, transfers and consolidated reports',
   cashier: 'Takes orders, bills and collects payment',
   waiter: 'Takes orders at the table and marks food served',
   chef: 'Works the kitchen queue and marks dishes unavailable',
@@ -21,7 +22,7 @@ export function landingFor(role: Role | null, isSuper: boolean) {
 
 export type NavItem = { href: string; label: string; icon: string; roles: Role[]; feature?: string };
 export const NAV: NavItem[] = [
-  { href: '/app', label: 'Dashboard', icon: 'home', roles: ['owner'] },
+  { href: '/app', label: 'Dashboard', icon: 'home', roles: ['owner', 'area_manager'] },
   { href: '/app/pos', label: 'POS', icon: 'pos', roles: ['owner', 'cashier', 'waiter'] },
   { href: '/app/tables', label: 'Tables', icon: 'table', roles: ['owner', 'cashier', 'waiter'], feature: 'tables' },
   { href: '/app/orders', label: 'Orders', icon: 'receipt', roles: ['owner', 'cashier', 'waiter'] },
@@ -31,8 +32,9 @@ export const NAV: NavItem[] = [
   { href: '/app/inventory', label: 'Inventory', icon: 'box', roles: ['owner'], feature: 'inventory' },
   { href: '/app/recipes', label: 'Recipes', icon: 'book', roles: ['owner'], feature: 'recipes' },
   { href: '/app/customers', label: 'Customers', icon: 'users', roles: ['owner', 'cashier', 'waiter'], feature: 'customers' },
-  { href: '/app/staff', label: 'Staff', icon: 'badge', roles: ['owner'], feature: 'staff' },
-  { href: '/app/reports', label: 'Reports', icon: 'chart', roles: ['owner'], feature: 'reports' },
+  { href: '/app/staff', label: 'Staff', icon: 'badge', roles: ['owner', 'area_manager'], feature: 'staff' },
+  { href: '/app/reports', label: 'Reports', icon: 'chart', roles: ['owner', 'area_manager'], feature: 'reports' },
+  { href: '/app/outlets', label: 'Outlets', icon: 'layers', roles: ['owner', 'area_manager'], feature: 'multi_outlet' },
   { href: '/app/billing', label: 'Plan & billing', icon: 'card', roles: ['owner'] },
   { href: '/app/settings', label: 'Settings', icon: 'gear', roles: ['owner'] },
 ];
