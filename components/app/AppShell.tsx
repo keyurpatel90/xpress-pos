@@ -11,6 +11,7 @@ import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/Logo';
 import { Badge, LinkBtn } from '@/components/ui';
 import { HelpFab } from '@/components/HelpFab';
+import { OutletSwitcher } from '@/components/app/OutletSwitcher';
 import { cn } from '@/lib/utils';
 import { subscribeApiLoading } from '@/lib/hooks';
 
@@ -115,6 +116,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {verified && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />}
             {verified ? `Verified ${ROLE_LABEL[role]}` : ROLE_LABEL[role]}
           </p>
+          <div className="mt-3"><OutletSwitcher /></div>
         </div>
         <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">
           {items.map((n) => {
@@ -148,7 +150,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-white px-3 lg:hidden">
           <button onClick={() => setOpen(true)} className="rounded-lg p-2 hover:bg-field" aria-label="Open menu"><Icon name="bars" /></button>
           <span className="truncate font-display font-semibold">{current?.label ?? restaurant.name}</span>
-          <span className="ml-auto"><Badge tone="brand">{ROLE_LABEL[role]}</Badge></span>
+          <span className="ml-auto flex items-center gap-2"><OutletSwitcher /><Badge tone="brand">{ROLE_LABEL[role]}</Badge></span>
         </header>
         {banner && (
           <div className={cn('flex shrink-0 flex-wrap items-center justify-center gap-x-3 px-4 py-1.5 text-center text-sm font-medium', banner.tone)}>
