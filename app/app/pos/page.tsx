@@ -27,15 +27,17 @@ function Pos() {
   const canBill = role === 'owner' || role === 'cashier';
 
   const { data: cat, loading } = useData<Row>(async (c) => {
-    const [cs, its, ts, gs, ls] = await Promise.all([
+    const [cs, its, ts, gs, ls, combos, comboItems] = await Promise.all([
       c.from('categories').select('*').eq('is_active', true).order('sort').order('name'),
       c.from('menu_items').select('*').order('sort').order('name'),
       c.from('dining_tables').select('*').order('sort').order('name'),
       c.from('modifier_groups').select('*, modifier_options(*)'),
       c.from('menu_item_modifier_groups').select('menu_item_id, group_id'),
+      c.from('menu_combos').select('*').eq('is_active', true).order('name'),
+      c.from('menu_combo_items').select('combo_id, menu_item_id, variant_id, qty'),
     ]);
-    return { cats: unwrap(cs), items: unwrap(its), tables: unwrap(ts), groups: unwrap(gs), links: unwrap(ls) };
-  }, { cats: [], items: [], tables: [], groups: [], links: [] });
+    return { cats: unwrap(cs), items: unwrap(its), tables: unwrap(ts), groups: unwrap(gs), links: unwrap(ls), combos: unwrap(combos), comboItems: unwrap(comboItems) };
+  }, { cats: [], items: [], tables: [], groups: [], links: [], combos: [], comboItems: [] });
 
   const { data: open, reload: reloadOpen } = useData<Row[]>(
     async (c) => unwrap(await c.from('orders').select('*, order_items(*), dining_tables(name)').eq('status', 'open').order('created_at')) ?? [], []);
@@ -127,7 +129,7 @@ function Pos() {
     const id = await act(async () => unwrap(await sb.rpc('send_kot', {
       p_order_id: activeId, p_type: ordType, p_table_id: tableId, p_customer_id: customer?.id ?? null,
       p_customer_name: customer?.name ?? null, p_customer_phone: customer?.phone ?? null, p_notes: notes,
-      p_items: lines.map((l) => ({ menu_item_id: l.item.id, qty: l.qty, notes: l.notes, modifier_ids: l.mods.map((m) => m.id) })),
+      p_items: lines.map((l) => ({ menu_item_id: l.item.is_combo ? null : l.item.id, combo_id: l.item.is_combo ? l.item.combo_id : null, qty: l.qty, notes: l.notes, modifier_ids: l.mods.map((m) => m.id) })), 
     })) as string);
     setBusy(false);
     if (!id) { reloadOpen(); return; }
@@ -159,11 +161,23 @@ function Pos() {
   const ready = open.flatMap((o) => (o.order_items as Row[]).filter((i) => i.status === 'ready').map((i) => ({ ...i, where: o.dining_tables?.name ?? `#${o.order_no}` })));
   const readyBy = ready.reduce<Record<string, Row[]>>((m, i) => ((m[i.where] ??= []).push(i), m), {});
 
-  const items = (cat.items as Row[]).filter((i) =>
+  const comboItems: Row[] = (cat.combos as Row[]).map((combo) => ({
+    ...combo,
+    id: `combo:${combo.id}`,
+    combo_id: combo.id,
+    is_combo: true,
+    category_id: 'combos',
+    is_available: true,
+    unit: 'combo',
+    is_veg: false,
+    tax_rate: restaurant.tax_rate,
+  }));
+  const allMenuItems = [...(cat.items as Row[]), ...comboItems];
+  const items = allMenuItems.filter((i) =>
     (catId === 'all' || i.category_id === catId) && (!vegOnly || i.is_veg) && (!q || i.name.toLowerCase().includes(q.toLowerCase())));
 
   if (loading) return <Loading variant="pos" />;
-  const noMenu = (cat.items as Row[]).length === 0;
+  const noMenu = allMenuItems.length === 0;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
@@ -206,7 +220,7 @@ function Pos() {
           )}
         </div>
         <div className="no-scrollbar flex gap-2 overflow-x-auto border-b border-line bg-white px-3 py-2">
-          {[{ id: 'all', name: 'All' }, ...(cat.cats as Row[])].map((c) => (
+          {[{ id: 'all', name: 'All' }, ...((cat.combos as Row[]).length ? [{ id: 'combos', name: 'Combos' }] : []), ...(cat.cats as Row[])].map((c) => (
             <button key={c.id} onClick={() => setCatId(c.id)}
               className={cn('shrink-0 rounded-lg px-3.5 py-1.5 text-sm font-semibold', catId === c.id ? 'bg-brand-600 text-white shadow-sm' : 'bg-slate-100 text-ink-soft hover:bg-slate-200')}>
               {c.name}
@@ -230,6 +244,7 @@ function Pos() {
                       <span className="font-display text-base font-extrabold">{inr(i.price)}</span>
                     </span>
                     <span className="mt-2 line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-5">{i.name}</span>
+                    {i.is_combo && <span className="mt-1 inline-flex w-fit rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">Combo · {(cat.comboItems as Row[]).filter((line) => line.combo_id === i.combo_id).length} items</span>}
                     <span className="mt-2 flex items-center gap-1.5 border-t border-line pt-2 text-xs font-medium text-ink-mute">
                       <Icon name="box" className="h-3.5 w-3.5" />per {i.unit}
                       {!i.is_available && <span className="ml-auto font-bold text-rose-600">Unavailable</span>}
