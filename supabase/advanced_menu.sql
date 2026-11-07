@@ -97,7 +97,7 @@ create index if not exists menu_item_audit_item_idx on public.menu_item_audit(me
 
 -- RLS: all members of the active outlet can read; only owners can write.
 do $$ declare t text; begin
-  foreach t in array array['menu_variant_groups','menu_variants','combo_offers','combo_items','price_schedules','price_schedule_rules','menu_item_audit'] loop
+  foreach t in array array['menu_variant_groups','menu_variants','combo_offers','price_schedules','menu_item_audit'] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('drop policy if exists %I on public.%I', t || '_read', t);
     execute format('create policy %I on public.%I for select to authenticated using (restaurant_id = (select public.current_restaurant_id()))', t || '_read', t);
