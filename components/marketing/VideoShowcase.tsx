@@ -9,6 +9,11 @@ const videos = [
     title: 'Xpress POS in action',
     description: 'See how Xpress POS helps your team move through service with confidence.',
   },
+  {
+    src: '/videos/gemini_generated_video_6b5c3d3b.mp4',
+    title: 'A smoother restaurant service',
+    description: 'Explore another look at how your restaurant team can stay in sync with Xpress POS.',
+  },
 ];
 
 export function VideoShowcase() {
@@ -64,7 +69,6 @@ export function VideoShowcase() {
             ref={videoRef}
             className="aspect-video w-full object-contain"
             src={activeVideo.src}
-            autoPlay
             muted
             loop
             playsInline
