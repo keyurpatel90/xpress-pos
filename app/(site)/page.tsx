@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { FaqList } from '@/components/marketing/FaqList';
 import { HeroPreview } from '@/components/marketing/HeroPreview';
 import { PlanCards } from '@/components/marketing/PlanCards';
+import { VideoShowcase } from '@/components/marketing/VideoShowcase';
 import { Icon } from '@/components/Icon';
 import { getCatalog } from '@/lib/catalog';
 import { FAQS, FEATURES, ROLE_PANELS, STEPS } from '@/lib/site';
@@ -67,6 +68,8 @@ export default async function HomePage() {
           </ul>
         </div>
       </section>
+
+      <VideoShowcase />
 
       <section className="mx-auto max-w-6xl px-5 py-16">
         <h2 className="font-display text-3xl font-extrabold tracking-tight md:text-4xl">Up and running in an afternoon</h2>
