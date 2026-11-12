@@ -25,8 +25,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   ]);
   if (!restaurant || !profile) return <NoAccess />;
 
+  const preferredLanguage = user.user_metadata?.app_language;
+
   return (
-    <AppProvider initial={{ access, restaurant: restaurant as Row, profile: profile as Row, email: user.email ?? '', verified: !!user.email_confirmed_at }}>
+    <AppProvider initial={{ access, restaurant: restaurant as Row, profile: profile as Row, email: user.email ?? '', verified: !!user.email_confirmed_at, language: preferredLanguage }}>
       <AppShell>{children}</AppShell>
     </AppProvider>
   );
