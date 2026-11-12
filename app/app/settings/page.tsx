@@ -2,15 +2,25 @@
 import { useEffect, useState } from 'react';
 import { api, unwrap, useAction, useSupabase } from '@/lib/hooks';
 import { useApp } from '@/components/app/AppProvider';
-import { Badge, Btn, Card, Field, Input, LinkBtn, PageHeader, Toggle } from '@/components/ui';
+import { Badge, Btn, Card, Field, Input, LinkBtn, PageHeader, Select, Toggle } from '@/components/ui';
+import { LANGUAGES, isLanguageCode, translate } from '@/lib/i18n';
 import type { Row } from '@/lib/types';
 
 export default function SettingsPage() {
-  const { restaurant, refresh, has } = useApp();
+  const { restaurant, refresh, has, language, setLanguage } = useApp();
   const sb = useSupabase();
   const act = useAction();
   const [f, setF] = useState<Row>({ ...restaurant });
   const set = (k: string, v: unknown) => setF((x) => ({ ...x, [k]: v }));
+
+  async function changeLanguage(value: string) {
+    if (!isLanguageCode(value)) return;
+    await act(async () => {
+      const saved = await setLanguage(value);
+      if (!saved) throw new Error(translate(language, 'settings.languageError'));
+      return saved;
+    }, translate(value, 'settings.languageSaved'));
+  }
 
   async function save() {
     if (!String(f.name).trim()) return;
@@ -28,6 +38,15 @@ export default function SettingsPage() {
     <>
       <PageHeader title="Settings" actions={<Btn onClick={save}>Save settings</Btn>} />
       <div className="space-y-4">
+        <Card className="p-5">
+          <h2 className="mb-1 font-display text-lg font-semibold">{translate(language, 'settings.language')}</h2>
+          <p className="mb-3 text-sm text-ink-mute">{translate(language, 'settings.languageDescription')}</p>
+          <Field label={translate(language, 'settings.language')}>
+            <Select value={language} onChange={(event) => void changeLanguage(event.target.value)}>
+              {LANGUAGES.map((option) => <option key={option.code} value={option.code}>{option.name}</option>)}
+            </Select>
+          </Field>
+        </Card>
         <Card className="p-5">
           <h2 className="mb-3 font-display text-lg font-semibold">Restaurant details</h2>
           <p className="mb-3 text-sm text-ink-mute">Printed at the top of every bill.</p>

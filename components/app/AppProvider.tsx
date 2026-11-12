@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { createClient } from '@/lib/supabase/client';
 import type { Access, Role, Row } from '@/lib/types';
 import { cn } from '@/lib/utils';
+import { isLanguageCode, LANGUAGES, type LanguageCode } from '@/lib/i18n';
 
 type ToastType = 'success' | 'error' | 'info';
 type ToastFn = (message: string, type?: ToastType) => void;
@@ -14,6 +15,8 @@ type Ctx = {
   role: Role;
   email: string;
   verified: boolean;
+  language: LanguageCode;
+  setLanguage: (language: LanguageCode) => Promise<boolean>;
   has: (feature: string) => boolean;
   refresh: () => Promise<void>;
   print: (node: ReactNode) => void;
@@ -30,7 +33,7 @@ export const useApp = () => {
 export const useToast = () => useContext(ToastCtx);
 
 export function AppProvider({ initial, children }: {
-  initial: { access: Access; profile: Row; restaurant: Row; email: string; verified: boolean };
+  initial: { access: Access; profile: Row; restaurant: Row; email: string; verified: boolean; language: unknown };
   children: ReactNode;
 }) {
   const [access, setAccess] = useState<Access>(initial.access);
@@ -38,8 +41,16 @@ export function AppProvider({ initial, children }: {
   const [toasts, setToasts] = useState<{ id: number; message: string; type: ToastType }[]>([]);
   const [printNode, setPrintNode] = useState<ReactNode>(null);
   const [mounted, setMounted] = useState(false);
+  const [language, setLanguageValue] = useState<LanguageCode>(isLanguageCode(initial.language) ? initial.language : 'en');
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    const selected = language;
+    const definition = LANGUAGES.find((item) => item.code === selected);
+    document.documentElement.lang = selected;
+    document.documentElement.dir = definition?.dir ?? 'ltr';
+  }, [language]);
 
   const toast = useCallback<ToastFn>((message, type = 'info') => {
     const id = Date.now() + Math.random();
@@ -57,6 +68,21 @@ export function AppProvider({ initial, children }: {
     if (r.data) setRestaurant(r.data as Row);
   }, [initial.access.restaurant_id]);
 
+  const setLanguage = useCallback(async (nextLanguage: LanguageCode) => {
+    if (!isLanguageCode(nextLanguage)) return false;
+    const sb = createClient();
+    const { data, error } = await sb.auth.getUser();
+    if (error || !data.user) return false;
+
+    const { error: updateError } = await sb.auth.updateUser({
+      data: { ...data.user.user_metadata, app_language: nextLanguage },
+    });
+    if (updateError) return false;
+
+    setLanguageValue(nextLanguage);
+    return true;
+  }, []);
+
   const print = useCallback((node: ReactNode) => {
     setPrintNode(node);
     setTimeout(() => {
@@ -73,9 +99,10 @@ export function AppProvider({ initial, children }: {
 
   const value = useMemo<Ctx>(() => ({
     access, restaurant, profile: initial.profile, role: access.role as Role, email: initial.email, verified: initial.verified,
+    language, setLanguage,
     has: (f) => access.features?.[f] !== false,
     refresh, print,
-  }), [access, restaurant, initial.profile, initial.email, initial.verified, refresh, print]);
+  }), [access, restaurant, initial.profile, initial.email, initial.verified, language, setLanguage, refresh, print]);
 
   return (
     <ToastCtx.Provider value={toast}>

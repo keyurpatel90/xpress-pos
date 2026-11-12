@@ -5,14 +5,15 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import LinearProgress from '@mui/material/LinearProgress';
 import { createClient } from '@/lib/supabase/client';
 import { NAV, ROLE_LABEL, landingFor, navFor } from '@/lib/roles';
-import { useApp } from '@/components/app/AppProvider';
+import { useApp, useToast } from '@/components/app/AppProvider';
 import { UpgradeCard } from '@/components/app/Upgrade';
 import { Icon } from '@/components/Icon';
 import { Logo } from '@/components/Logo';
-import { Badge, LinkBtn } from '@/components/ui';
+import { Badge, LinkBtn, Select } from '@/components/ui';
 import { HelpFab } from '@/components/HelpFab';
 import { cn } from '@/lib/utils';
 import { subscribeApiLoading } from '@/lib/hooks';
+import { isLanguageCode, LANGUAGES, translate, translateNavigation } from '@/lib/i18n';
 
 async function signOut() {
   await createClient().auth.signOut();
@@ -32,13 +33,23 @@ export function NoAccess() {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { access, role, restaurant, email, has, verified } = useApp();
+  const { access, role, restaurant, email, has, verified, language, setLanguage } = useApp();
+  const toast = useToast();
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [apiPending, setApiPending] = useState(false);
   const [progress, setProgress] = useState(0);
   const progressRef = useRef(0);
+
+  const updateLanguage = async (value: string) => {
+    if (!isLanguageCode(value)) return;
+    const saved = await setLanguage(value);
+    toast(
+      saved ? translate(value, 'settings.languageSaved') : translate(language, 'settings.languageError'),
+      saved ? 'success' : 'error',
+    );
+  };
 
   const updateProgress = (value: number) => {
     progressRef.current = value;
@@ -90,7 +101,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 text-rose-600"><Icon name="lock" className="h-6 w-6" /></span>
         <h2 className="font-display text-xl font-bold">Your free trial or plan has ended</h2>
         <p className="mt-2 text-sm text-ink-mute">Your data is safe. {role === 'owner' ? 'Choose a plan to continue taking orders.' : 'Please ask the restaurant owner to renew the plan.'}</p>
-        {role === 'owner' && <div className="mt-5"><LinkBtn href="/app/billing">Choose a plan</LinkBtn></div>}
+        {role === 'owner' && <div className="mt-5"><LinkBtn href="/app/billing">{translate(language, 'action.choosePlan')}</LinkBtn></div>}
       </div>
     );
   } else if (featureOff && current?.feature) body = <UpgradeCard feature={current.feature} />;
@@ -125,21 +136,25 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className={cn('flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors',
                   active ? 'bg-brand-600 text-white shadow-sm' : 'text-ink-soft hover:bg-slate-100')}>
                 <Icon name={n.icon} className="h-[18px] w-[18px]" />
-                <span className="flex-1">{n.label}</span>
+                <span className="flex-1">{translateNavigation(language, n.href, n.label)}</span>
                 {locked && !access.locked && <Icon name="lock" className={cn('h-3.5 w-3.5', active ? 'text-white/80' : 'text-amber-600')} />}
               </Link>
             );
           })}
           {access.is_super_admin && (
             <Link href="/admin" onClick={() => { setOpen(false); updateProgress(18); }} className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-ink-soft hover:bg-field">
-              <Icon name="shield" className="h-[18px] w-[18px]" /> Super admin
+              <Icon name="shield" className="h-[18px] w-[18px]" /> {translate(language, 'nav.superAdmin')}
             </Link>
           )}
         </nav>
         <div className="border-t border-line p-3">
           <p className="truncate px-1 text-xs text-ink-mute">{email}</p>
+          <label className="mt-2 block px-1 text-xs font-medium text-ink-mute" htmlFor="app-language">{translate(language, 'settings.language')}</label>
+          <Select id="app-language" className="mt-1" value={language} onChange={(event) => void updateLanguage(event.target.value)}>
+            {LANGUAGES.map((option) => <option key={option.code} value={option.code}>{option.name}</option>)}
+          </Select>
           <button onClick={signOut} className="mt-1 flex w-full items-center gap-2 rounded-lg px-2 py-2 text-sm font-medium text-ink-soft hover:bg-field">
-            <Icon name="logout" className="h-4 w-4" /> Sign out
+            <Icon name="logout" className="h-4 w-4" /> {translate(language, 'action.signOut')}
           </button>
         </div>
       </aside>
@@ -147,13 +162,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-white px-3 lg:hidden">
           <button onClick={() => setOpen(true)} className="rounded-lg p-2 hover:bg-field" aria-label="Open menu"><Icon name="bars" /></button>
-          <span className="truncate font-display font-semibold">{current?.label ?? restaurant.name}</span>
+          <span className="truncate font-display font-semibold">{current ? translateNavigation(language, current.href, current.label) : restaurant.name}</span>
           <span className="ml-auto"><Badge tone="brand">{ROLE_LABEL[role]}</Badge></span>
         </header>
         {banner && (
           <div className={cn('flex shrink-0 flex-wrap items-center justify-center gap-x-3 px-4 py-1.5 text-center text-sm font-medium', banner.tone)}>
             {banner.text}
-            <Link href="/app/billing" className="font-semibold underline underline-offset-2">{access.status === 'trialing' ? 'Choose a plan' : 'Renew now'}</Link>
+            <Link href="/app/billing" className="font-semibold underline underline-offset-2">{access.status === 'trialing' ? translate(language, 'action.choosePlan') : translate(language, 'action.renewNow')}</Link>
           </div>
         )}
         <main className={cn('min-h-0 flex-1', full && !lockedOut && !featureOff ? 'flex flex-col overflow-hidden' : 'overflow-y-auto')}>
