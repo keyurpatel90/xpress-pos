@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { FaqList } from '@/components/marketing/FaqList';
 import { HeroPreview } from '@/components/marketing/HeroPreview';
 import { PlanCards } from '@/components/marketing/PlanCards';
+import { VideoShowcase } from '@/components/marketing/VideoShowcase';
 import { Icon } from '@/components/Icon';
 import { getCatalog } from '@/lib/catalog';
 import { FAQS, FEATURES, ROLE_PANELS, STEPS } from '@/lib/site';
@@ -89,6 +90,8 @@ export default async function HomePage() {
         <PlanCards plans={plans} trialDays={trialDays} />
         <Link href="/pricing" className="mt-6 inline-block font-bold text-brand-700 hover:underline">Compare plans in detail</Link>
       </section>
+
+      <VideoShowcase />
 
       <section className="mx-auto max-w-3xl px-5 py-16">
         <h2 className="mb-6 font-display text-3xl font-extrabold tracking-tight">Questions owners ask</h2>
