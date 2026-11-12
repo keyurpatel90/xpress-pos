@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { AdminNav } from '@/components/admin/AdminNav';
+import { AdminLocaleProvider } from '@/components/admin/AdminLocaleProvider';
 import { Logo } from '@/components/Logo';
 import { isLanguageCode } from '@/lib/i18n';
 
@@ -16,14 +17,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!isAdmin) redirect('/app');
   const language = isLanguageCode(user.user_metadata?.app_language) ? user.user_metadata.app_language : 'en';
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-line bg-white">
+    <AdminLocaleProvider initialLanguage={language}>
+      <div className="min-h-screen">
+        <header className="border-b border-line bg-white">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-5 py-3">
           <div className="flex items-center gap-3"><Logo href="/admin" /><span className="rounded-md bg-ink px-2 py-0.5 text-xs font-semibold text-white">Super admin</span></div>
-          <AdminNav initialLanguage={language} />
+          <AdminNav />
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-5 py-6">{children}</main>
-    </div>
+        <main className="mx-auto max-w-6xl px-5 py-6">{children}</main>
+      </div>
+    </AdminLocaleProvider>
   );
 }

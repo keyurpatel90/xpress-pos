@@ -1,9 +1,9 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { isLanguageCode, LANGUAGES, type LanguageCode } from '@/lib/i18n';
+import { isLanguageCode, LANGUAGES } from '@/lib/i18n';
+import { useLocale } from '@/components/app/AppProvider';
 import { cn } from '@/lib/utils';
 
 const LINKS = [
@@ -14,22 +14,12 @@ const LINKS = [
   { href: '/admin/support', label: 'Support inbox' },
 ];
 
-export function AdminNav({ initialLanguage }: { initialLanguage: LanguageCode }) {
+export function AdminNav() {
   const path = usePathname();
-  const [language, setLanguage] = useState(initialLanguage);
-
-  useEffect(() => {
-    document.documentElement.lang = language;
-    document.documentElement.dir = LANGUAGES.find((item) => item.code === language)?.dir ?? 'ltr';
-  }, [language]);
+  const { language, setLanguage } = useLocale();
 
   async function changeLanguage(value: string) {
-    if (!isLanguageCode(value)) return;
-    const sb = createClient();
-    const { data } = await sb.auth.getUser();
-    if (!data.user) return;
-    const { error } = await sb.auth.updateUser({ data: { ...data.user.user_metadata, app_language: value } });
-    if (!error) setLanguage(value);
+    if (isLanguageCode(value)) await setLanguage(value);
   }
 
   return (

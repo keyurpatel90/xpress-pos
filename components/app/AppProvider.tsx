@@ -23,7 +23,12 @@ type Ctx = {
 };
 
 const AppCtx = createContext<Ctx | null>(null);
+const LocaleCtx = createContext<{ language: LanguageCode; setLanguage: (language: LanguageCode) => Promise<boolean> } | null>(null);
 const ToastCtx = createContext<ToastFn>(() => {});
+
+export function LocaleScope({ value, children }: { value: { language: LanguageCode; setLanguage: (language: LanguageCode) => Promise<boolean> }; children: ReactNode }) {
+  return <LocaleCtx.Provider value={value}>{children}</LocaleCtx.Provider>;
+}
 
 export const useApp = () => {
   const c = useContext(AppCtx);
@@ -31,6 +36,12 @@ export const useApp = () => {
   return c;
 };
 export const useToast = () => useContext(ToastCtx);
+export const useOptionalLanguage = () => useContext(LocaleCtx)?.language ?? null;
+export const useLocale = () => {
+  const locale = useContext(LocaleCtx);
+  if (!locale) throw new Error('useLocale must be used inside LocaleScope');
+  return locale;
+};
 
 export function AppProvider({ initial, children }: {
   initial: { access: Access; profile: Row; restaurant: Row; email: string; verified: boolean; language: unknown };
@@ -105,8 +116,9 @@ export function AppProvider({ initial, children }: {
   }), [access, restaurant, initial.profile, initial.email, initial.verified, language, setLanguage, refresh, print]);
 
   return (
-    <ToastCtx.Provider value={toast}>
-      <AppCtx.Provider value={value}>
+    <LocaleScope value={{ language, setLanguage }}>
+      <ToastCtx.Provider value={toast}>
+        <AppCtx.Provider value={value}>
         {children}
         <div className="pointer-events-none fixed inset-x-0 bottom-4 z-[60] flex flex-col items-center gap-2 px-4">
           {toasts.map((t) => (
@@ -118,7 +130,8 @@ export function AppProvider({ initial, children }: {
           ))}
         </div>
         {mounted && printNode ? createPortal(<div id="print-root">{printNode}</div>, document.body) : null}
-      </AppCtx.Provider>
-    </ToastCtx.Provider>
+        </AppCtx.Provider>
+      </ToastCtx.Provider>
+    </LocaleScope>
   );
 }
