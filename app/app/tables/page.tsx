@@ -7,6 +7,7 @@ import { Badge, Btn, Card, Empty, Field, Input, Loading, Modal, PageHeader, Sele
 import { Icon } from '@/components/Icon';
 import { cn, inr, minutesSince } from '@/lib/utils';
 import type { Row } from '@/lib/types';
+import { effectiveTableStatus, type StoredTableStatus, type EffectiveTableStatus } from '@/lib/state-machines';
 
 export default function TablesPage() {
   const { role, access } = useApp();
@@ -25,6 +26,11 @@ export default function TablesPage() {
 
   const [gen, setGen] = useState({ count: '10', prefix: 'T', seats: '4', section: 'Main' });
   const [edit, setEdit] = useState<Row | null>(null);
+  const tableState = (table: Row): EffectiveTableStatus => effectiveTableStatus(
+    table.status as StoredTableStatus,
+    data.orders.some((order) => order.table_id === table.id),
+  );
+  const editTable = (table: Row) => setEdit({ ...table, status: table.status === 'occupied' ? 'free' : table.status });
 
   async function generate() {
     const n = Math.min(200, Math.max(1, Number(gen.count) || 0));
@@ -52,9 +58,9 @@ export default function TablesPage() {
 
   if (loading) return <Loading variant="table" />;
   const sections = Array.from(new Set(data.tables.map((t) => t.section)));
-  const isBusy = (t: Row) => data.orders.some((x) => x.table_id === t.id) || t.status === 'occupied';
+  const isBusy = (table: Row) => tableState(table) === 'occupied';
   const nBusy = data.tables.filter(isBusy).length;
-  const nReserved = data.tables.filter((t) => !isBusy(t) && t.status === 'reserved').length;
+  const nReserved = data.tables.filter((table) => tableState(table) === 'reserved').length;
   const nFree = data.tables.length - nBusy - nReserved;
 
   return (
@@ -84,23 +90,24 @@ export default function TablesPage() {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6">
             {data.tables.filter((t) => t.section === s).map((t) => {
               const o = data.orders.find((x) => x.table_id === t.id);
-              const busy = isBusy(t);
+              const state = effectiveTableStatus(t.status as StoredTableStatus, !!o);
+              const busy = state === 'occupied';
               return (
                 <div key={t.id} role="button" tabIndex={0} onClick={() => router.push(`/app/pos?table=${t.id}`)}
                   onKeyDown={(e) => e.key === 'Enter' && router.push(`/app/pos?table=${t.id}`)}
                   className={cn('relative cursor-pointer rounded-xl border-2 bg-white p-3.5 transition-all hover:-translate-y-0.5 hover:shadow-lift',
-                    busy ? 'border-rose-300' : t.status === 'reserved' ? 'border-amber-300' : 'border-emerald-300')}>
+                    busy ? 'border-rose-300' : state === 'reserved' ? 'border-amber-300' : 'border-emerald-300')}>
                   <div className="flex items-start justify-between">
                     <p className="font-display text-xl font-extrabold">{t.name}</p>
                     {isOwner && (
-                      <button onClick={(e) => { e.stopPropagation(); setEdit(t); }} className="rounded-md p-1 text-ink-mute hover:bg-white" aria-label={`Edit ${t.name}`}><Icon name="edit" className="h-4 w-4" /></button>
+                      <button onClick={(e) => { e.stopPropagation(); editTable(t); }} className="rounded-md p-1 text-ink-mute hover:bg-white" aria-label={`Edit ${t.name}`}><Icon name="edit" className="h-4 w-4" /></button>
                     )}
                   </div>
                   <p className="text-xs text-ink-mute">{t.seats} seats</p>
                   <div className="mt-2">
                     {o ? <><Badge tone="red">Occupied</Badge><p className="mt-1.5 text-xs font-semibold text-ink-soft">Order #{o.order_no}</p><p className="font-display text-base font-extrabold text-brand-600">{inr(o.total)}<span className="ml-1.5 text-xs font-medium text-ink-mute">{minutesSince(o.created_at)} min</span></p></>
                       : busy ? <Badge tone="red">Occupied</Badge>
-                      : <Badge tone={t.status === 'reserved' ? 'yellow' : 'green'}>{t.status === 'reserved' ? 'Reserved' : 'Vacant'}</Badge>}
+                      : <Badge tone={state === 'reserved' ? 'yellow' : 'green'}>{state === 'reserved' ? 'Reserved' : 'Vacant'}</Badge>}
                   </div>
                 </div>
               );
@@ -117,7 +124,7 @@ export default function TablesPage() {
             <Field label="Section"><Input value={edit.section} onChange={(e) => setEdit({ ...edit, section: e.target.value })} /></Field>
             <Field label="Status">
               <Select value={edit.status} onChange={(e) => setEdit({ ...edit, status: e.target.value })}>
-                <option value="free">Free</option><option value="reserved">Reserved</option><option value="occupied">Occupied</option>
+                <option value="free">Free</option><option value="reserved">Reserved</option>
               </Select>
             </Field>
           </div>

@@ -7,10 +7,11 @@ import { Icon } from '@/components/Icon';
 import { LogoMark } from '@/components/Logo';
 import { cn, minutesSince, typeLabel } from '@/lib/utils';
 import type { Row } from '@/lib/types';
+import { canTransitionOrderItem, nextKitchenStage, nextOrderItemStatus, type KitchenStage, type OrderItemStatus } from '@/lib/state-machines';
 
-const NEXT: Record<string, string> = { new: 'preparing', preparing: 'ready', ready: 'served' };
+type KitchenColumn = { id: KitchenStage; title: string; icon: string; action: string; box: string; badge: string; edge: string; empty: string };
 // Full class strings so Tailwind can see them
-const COLS = [
+const COLS: KitchenColumn[] = [
   { id: 'new', title: 'New items', icon: 'clock', action: 'Start cooking', box: 'bg-orange-500 shadow-[0_6px_14px_-4px_rgba(249,115,22,.55)]', badge: 'border-orange-400 text-orange-600', edge: 'border-l-orange-500', empty: 'No pending items' },
   { id: 'preparing', title: 'Cooking station', icon: 'chef', action: 'Mark ready', box: 'bg-blue-500 shadow-[0_6px_14px_-4px_rgba(59,130,246,.55)]', badge: 'border-blue-400 text-blue-600', edge: 'border-l-blue-500', empty: 'Station idle' },
   { id: 'ready', title: 'Ready / pickup', icon: 'checkc', action: 'Handed over', box: 'bg-emerald-500 shadow-[0_6px_14px_-4px_rgba(16,185,129,.55)]', badge: 'border-emerald-400 text-emerald-600', edge: 'border-l-emerald-500', empty: 'No items ready' },
@@ -70,8 +71,8 @@ export default function KdsPage() {
       map.set(k, t);
     });
     return Array.from(map.values()).map((t): Row => {
-      const st = t.items.some((i: Row) => i.status === 'new') ? 'new' : t.items.some((i: Row) => i.status === 'preparing') ? 'preparing' : 'ready';
-      return { ...t, status: st };
+      const stage = nextKitchenStage(t.items.map((item: Row) => item.status as OrderItemStatus));
+      return { ...t, status: stage ?? 'ready' };
     });
   }, [shown]);
 
@@ -88,9 +89,10 @@ export default function KdsPage() {
   }, [shown]);
   const activeQty = summary.reduce((s, e) => s + e.qty, 0);
 
-  async function move(ids: string[], status: string) {
-    if (!ids.length) return;
-    await act(async () => unwrap(await sb.rpc('set_item_status', { p_ids: ids, p_status: status })));
+  async function move(ids: string[], fromStatus: OrderItemStatus) {
+    const toStatus = nextOrderItemStatus(fromStatus);
+    if (!ids.length || !toStatus || !canTransitionOrderItem(fromStatus, toStatus)) return;
+    await act(async () => unwrap(await sb.rpc('set_item_status', { p_ids: ids, p_status: toStatus })));
     reload();
   }
 
@@ -191,7 +193,7 @@ export default function KdsPage() {
                         <ul className="space-y-1">
                           {t.items.map((i: Row) => (
                             <li key={i.id}>
-                              <button onClick={() => move([i.id], NEXT[i.status])} title="Tap to move this dish to the next stage"
+                              <button onClick={() => move([i.id], i.status as OrderItemStatus)} title="Tap to move this dish to the next stage"
                                 className="flex w-full items-start gap-2 rounded-lg px-1.5 py-1 text-left hover:bg-slate-50">
                                 <span className="font-display text-lg font-extrabold leading-6">{i.qty}×</span>
                                 <span className="min-w-0 flex-1">
@@ -206,7 +208,7 @@ export default function KdsPage() {
                         </ul>
                         {t.order.notes && <p className="mt-2 rounded-lg bg-amber-50 px-2.5 py-1.5 text-sm">Order note: {t.order.notes}</p>}
                         <Btn className="mt-3 w-full" size="lg" variant={col.id === 'ready' ? 'secondary' : 'primary'}
-                          onClick={() => move(t.items.filter((i: Row) => i.status !== NEXT[col.id]).map((i: Row) => i.id), NEXT[col.id])}>
+                          onClick={() => move(t.items.filter((i: Row) => i.status === col.id).map((i: Row) => i.id), col.id)}>
                           {col.action}
                         </Btn>
                       </article>
@@ -225,7 +227,7 @@ export default function KdsPage() {
                         {(i.modifiers ?? []).length > 0 && <p className="text-sm text-brand-700">{(i.modifiers as Row[]).map((m) => m.name).join(', ')}</p>}
                         {i.notes && <p className="text-sm font-semibold text-rose-600">Note: {i.notes}</p>}
                         <p className="mt-1 text-xs font-medium text-ink-mute">{i.station} · KOT {i.kot_no}</p>
-                        <Btn className="mt-3 w-full" variant={col.id === 'ready' ? 'secondary' : 'primary'} onClick={() => move([i.id], NEXT[col.id])}>{col.action}</Btn>
+                        <Btn className="mt-3 w-full" variant={col.id === 'ready' ? 'secondary' : 'primary'} onClick={() => move([i.id], i.status as OrderItemStatus)}>{col.action}</Btn>
                       </article>
                     );
                   })}

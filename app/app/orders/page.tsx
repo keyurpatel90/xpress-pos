@@ -9,6 +9,7 @@ import { Badge, Btn, Empty, Input, Loading, Modal, PageHeader, Select, Table } f
 import { Icon } from '@/components/Icon';
 import { fmtDate, inr, typeLabel } from '@/lib/utils';
 import type { Row } from '@/lib/types';
+import { canTransitionOrder, type OrderStatus } from '@/lib/state-machines';
 
 const TONE: Record<string, 'green' | 'yellow' | 'red'> = { paid: 'green', open: 'yellow', cancelled: 'red' };
 
@@ -45,7 +46,7 @@ export default function OrdersPage() {
     setDetail({ items: (i.data as Row[]) ?? [], payments: (p.data as Row[]) ?? [] });
   }
   async function cancel() {
-    if (!sel || !confirm('Cancel this order?')) return;
+    if (!sel || !canTransitionOrder(sel.status as OrderStatus, 'cancelled') || !confirm('Cancel this order?')) return;
     const ok = await act(async () => unwrap(await sb.rpc('cancel_order', { p_order: sel.id })) ?? true, 'Order cancelled');
     if (ok) { setSel(null); reload(); }
   }
@@ -80,8 +81,8 @@ export default function OrdersPage() {
       )}
       <Modal open={!!sel} onClose={() => setSel(null)} title={sel ? `Order #${sel.order_no}` : ''}
         footer={sel && <>
-          {sel.status === 'open' && canAct && <Btn variant="danger" className="mr-auto" onClick={cancel}>Cancel order</Btn>}
-          {sel.status === 'open' && <Link href={`/app/pos?order=${sel.id}`} className="btn btn-secondary btn-md">Open in POS</Link>}
+          {canTransitionOrder(sel.status as OrderStatus, 'cancelled') && canAct && <Btn variant="danger" className="mr-auto" onClick={cancel}>Cancel order</Btn>}
+          {canTransitionOrder(sel.status as OrderStatus, 'paid') && <Link href={`/app/pos?order=${sel.id}`} className="btn btn-secondary btn-md">Open in POS</Link>}
           <Btn onClick={() => print(<Invoice restaurant={restaurant} order={sel} items={detail.items} payments={detail.payments} tableName={sel.dining_tables?.name} />)}>
             <Icon name="print" className="h-4 w-4" /> Print bill
           </Btn>
