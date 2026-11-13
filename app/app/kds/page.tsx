@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { unwrap, useAction, useData, useSupabase } from '@/lib/hooks';
+import { api, unwrap, useAction, useData, useSupabase } from '@/lib/hooks';
 import { useApp } from '@/components/app/AppProvider';
 import { Btn, Loading, Segmented, Toggle } from '@/components/ui';
 import { Icon } from '@/components/Icon';
@@ -92,7 +92,7 @@ export default function KdsPage() {
   async function move(ids: string[], fromStatus: OrderItemStatus) {
     const toStatus = nextOrderItemStatus(fromStatus);
     if (!ids.length || !toStatus || !canTransitionOrderItem(fromStatus, toStatus)) return;
-    await act(async () => unwrap(await sb.rpc('set_item_status', { p_ids: ids, p_status: toStatus })));
+    await act(() => api('/api/order-items/transition', 'POST', { ids, from_status: fromStatus }));
     reload();
   }
 

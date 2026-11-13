@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
-import { unwrap, useAction, useData, useSupabase } from '@/lib/hooks';
+import { api, unwrap, useAction, useData, useSupabase } from '@/lib/hooks';
 import { useApp } from '@/components/app/AppProvider';
 import { Invoice } from '@/components/app/Invoice';
 import { SendWhatsApp } from '@/components/app/SendWhatsApp';
@@ -46,8 +46,9 @@ export default function OrdersPage() {
     setDetail({ items: (i.data as Row[]) ?? [], payments: (p.data as Row[]) ?? [] });
   }
   async function cancel() {
-    if (!sel || !canTransitionOrder(sel.status as OrderStatus, 'cancelled') || !confirm('Cancel this order?')) return;
-    const ok = await act(async () => unwrap(await sb.rpc('cancel_order', { p_order: sel.id })) ?? true, 'Order cancelled');
+    if (!sel || !canTransitionOrder(sel.status as OrderStatus, 'cancelled') || detail.items.some((item) => item.status === 'served')) return;
+    if (!confirm('Cancel this order?')) return;
+    const ok = await act(() => api('/api/orders/cancel', 'POST', { order_id: sel.id }), 'Order cancelled');
     if (ok) { setSel(null); reload(); }
   }
 
@@ -81,7 +82,7 @@ export default function OrdersPage() {
       )}
       <Modal open={!!sel} onClose={() => setSel(null)} title={sel ? `Order #${sel.order_no}` : ''}
         footer={sel && <>
-          {canTransitionOrder(sel.status as OrderStatus, 'cancelled') && canAct && <Btn variant="danger" className="mr-auto" onClick={cancel}>Cancel order</Btn>}
+          {canTransitionOrder(sel.status as OrderStatus, 'cancelled') && canAct && !detail.items.some((item) => item.status === 'served') && <Btn variant="danger" className="mr-auto" onClick={cancel}>Cancel order</Btn>}
           {canTransitionOrder(sel.status as OrderStatus, 'paid') && <Link href={`/app/pos?order=${sel.id}`} className="btn btn-secondary btn-md">Open in POS</Link>}
           <Btn onClick={() => print(<Invoice restaurant={restaurant} order={sel} items={detail.items} payments={detail.payments} tableName={sel.dining_tables?.name} />)}>
             <Icon name="print" className="h-4 w-4" /> Print bill
