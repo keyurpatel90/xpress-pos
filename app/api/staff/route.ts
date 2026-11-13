@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { HttpError, fail, requireUser } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { STAFF_ROLES } from '@/lib/roles';
+import { canTransitionProfile, type ProfileStatus } from '@/lib/state-machines';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,14 +58,14 @@ async function target(id: string, restaurantId: string, selfId: string) {
   const { data } = await admin.from('profiles').select('*').eq('id', id).maybeSingle();
   if (!data || data.restaurant_id !== restaurantId) throw new HttpError(404, 'Staff member not found');
   if (data.role === 'owner' || data.id === selfId) throw new HttpError(400, 'The owner login cannot be changed here');
-  return admin;
+  return { admin, member: data };
 }
 
 export async function PATCH(req: Request) {
   try {
     const { profile } = await requireUser(['owner']);
     const { id, role, status } = await req.json();
-    const admin = await target(id, profile.restaurant_id, profile.id);
+    const { admin, member } = await target(id, profile.restaurant_id, profile.id);
     const patch: Record<string, string> = {};
     if (role !== undefined) {
       if (!STAFF_ROLES.includes(role)) throw new HttpError(400, 'Choose a valid role');
@@ -72,11 +73,28 @@ export async function PATCH(req: Request) {
     }
     if (status !== undefined) {
       if (!['active', 'disabled'].includes(status)) throw new HttpError(400, 'Invalid status');
+      if (!canTransitionProfile(member.status as ProfileStatus, status as ProfileStatus)) {
+        throw new HttpError(409, 'This staff status transition is not allowed');
+      }
       patch.status = status;
-      await admin.auth.admin.updateUserById(id, { ban_duration: status === 'disabled' ? '876000h' : 'none' });
     }
-    const { error } = await admin.from('profiles').update(patch).eq('id', id);
+    if (Object.keys(patch).length === 0) throw new HttpError(400, 'No staff changes were provided');
+
+    const { data: updated, error } = await admin.from('profiles').update(patch)
+      .eq('id', id).eq('status', member.status).select('id');
     if (error) throw new Error(error.message);
+    if (!updated?.length) throw new HttpError(409, 'This staff member changed. Refresh and try again.');
+
+    if (status !== undefined) {
+      const { error: authError } = await admin.auth.admin.updateUserById(id, {
+        ban_duration: status === 'disabled' ? '876000h' : 'none',
+      });
+      if (authError) {
+        const { error: rollbackError } = await admin.from('profiles')
+          .update({ role: member.role, status: member.status }).eq('id', id).eq('status', status);
+        throw new Error(rollbackError ? `${authError.message}; profile rollback failed` : authError.message);
+      }
+    }
     return NextResponse.json({ ok: true });
   } catch (e) {
     return fail(e);
@@ -87,7 +105,7 @@ export async function DELETE(req: Request) {
   try {
     const { profile } = await requireUser(['owner']);
     const { id } = await req.json();
-    const admin = await target(id, profile.restaurant_id, profile.id);
+    const { admin } = await target(id, profile.restaurant_id, profile.id);
     const { error } = await admin.auth.admin.deleteUser(id);
     if (error) throw new Error(error.message);
     return NextResponse.json({ ok: true });

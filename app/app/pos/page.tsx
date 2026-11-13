@@ -10,6 +10,7 @@ import { Badge, Btn, Input, Loading, Modal, Segmented, Toggle } from '@/componen
 import { Icon } from '@/components/Icon';
 import { ORDER_TYPES, cn, estimate, inr, typeLabel } from '@/lib/utils';
 import type { Row } from '@/lib/types';
+import { canTransitionOrderItem, nextOrderItemStatus, type OrderItemStatus } from '@/lib/state-machines';
 
 type Line = { key: string; item: Row; qty: number; notes: string; mods: Row[] };
 const STATUS_TONE: Record<string, 'gray' | 'yellow' | 'green' | 'dark'> = { new: 'gray', preparing: 'yellow', ready: 'green', served: 'dark' };
@@ -139,9 +140,10 @@ function Pos() {
     if (withPrint || restaurant.auto_print_kot) printKot(id);
   }
 
-  async function cancelItem(id: string) {
+  async function cancelItem(item: Row) {
+    if (!canTransitionOrderItem(item.status as OrderItemStatus, 'cancelled')) return;
     if (!confirm('Cancel this item?')) return;
-    await act(async () => unwrap(await sb.rpc('cancel_order_item', { p_item: id })), 'Item cancelled');
+    await act(async () => unwrap(await sb.rpc('cancel_order_item', { p_item: item.id })), 'Item cancelled');
     reloadOpen();
   }
   async function cancelOrder() {
@@ -150,7 +152,9 @@ function Pos() {
     setActiveId(null); setTableId(null); reloadOpen();
   }
   async function serve(ids: string[]) {
-    await act(async () => unwrap(await sb.rpc('set_item_status', { p_ids: ids, p_status: 'served' })));
+    const nextStatus = nextOrderItemStatus('ready');
+    if (!ids.length || !nextStatus || !canTransitionOrderItem('ready', nextStatus)) return;
+    await act(async () => unwrap(await sb.rpc('set_item_status', { p_ids: ids, p_status: nextStatus })));
     reloadOpen();
   }
   function resetAfterPaid() {
@@ -283,7 +287,7 @@ function Pos() {
                       {(i.modifiers ?? []).length > 0 && <span className="block truncate text-xs text-ink-mute">{(i.modifiers as Row[]).map((m) => m.name).join(', ')}</span>}
                     </span>
                     <Badge tone={STATUS_TONE[i.status]}>{i.status}</Badge>
-                    {canBill && <button onClick={() => cancelItem(i.id)} className="text-ink-mute hover:text-rose-600" aria-label="Cancel item"><Icon name="trash" className="h-4 w-4" /></button>}
+                    {canBill && canTransitionOrderItem(i.status as OrderItemStatus, 'cancelled') && <button onClick={() => cancelItem(i)} className="text-ink-mute hover:text-rose-600" aria-label="Cancel item"><Icon name="trash" className="h-4 w-4" /></button>}
                   </li>
                 ))}
               </ul>

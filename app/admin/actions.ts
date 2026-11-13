@@ -2,6 +2,7 @@
 import { revalidatePath } from 'next/cache';
 import { assertSuperAdmin } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { canTransitionSupportTicket, type SupportTicketStatus } from '@/lib/state-machines';
 
 type Result = { ok: true } | { ok: false; error: string };
 type Admin = ReturnType<typeof createAdminClient>;
@@ -88,6 +89,17 @@ export async function restaurantAction(input: { id: string; action: 'extend_tria
   });
 }
 
-export async function setTicketStatus(id: string, status: 'open' | 'closed') {
-  return guard(async (admin) => must((await admin.from('support_tickets').update({ status }).eq('id', id)).error));
+export async function setTicketStatus(id: string, status: SupportTicketStatus) {
+  return guard(async (admin) => {
+    const { data: ticket, error } = await admin.from('support_tickets').select('status').eq('id', id).maybeSingle();
+    must(error);
+    if (!ticket) throw new Error('Support ticket not found');
+    if (!canTransitionSupportTicket(ticket.status as SupportTicketStatus, status)) {
+      throw new Error('This support ticket status transition is not allowed');
+    }
+    const { data: updated, error: updateError } = await admin.from('support_tickets')
+      .update({ status }).eq('id', id).eq('status', ticket.status).select('id');
+    must(updateError);
+    if (!updated?.length) throw new Error('This support ticket changed. Refresh and try again.');
+  });
 }
