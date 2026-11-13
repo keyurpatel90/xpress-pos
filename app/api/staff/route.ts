@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { HttpError, fail, requireUser } from '@/lib/auth';
+import { HttpError, fail, readJson, requireUser } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { STAFF_ROLES } from '@/lib/roles';
 import { canTransitionProfile, type ProfileStatus } from '@/lib/state-machines';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,22 +13,27 @@ const friendly = (m: string) => (/already|registered|exists/i.test(m) ? 'This em
 export async function POST(req: Request) {
   try {
     const { sb, profile } = await requireUser(['owner']);
-    const { data: allowed } = await sb.rpc('feature_enabled', { p_key: 'staff' });
+    const { data: allowed, error: featureError } = await sb.rpc('feature_enabled', { p_key: 'staff' });
+    if (featureError) throw new HttpError(500, 'Unable to check staff plan access');
     if (!allowed) throw new HttpError(402, 'Staff logins are not available on your plan right now');
 
-    const body = await req.json();
-    const email = String(body.email || '').trim().toLowerCase();
-    const fullName = String(body.full_name || '').trim();
-    const role = String(body.role || '');
-    const mode = body.mode === 'password' ? 'password' : 'invite';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new HttpError(400, 'Enter a valid email address');
-    if (!fullName) throw new HttpError(400, 'Enter the staff member’s name');
-    if (!STAFF_ROLES.includes(role as never)) throw new HttpError(400, 'Choose a valid role');
+    const input = z.object({
+      email: z.string().trim().email().max(200),
+      full_name: z.string().trim().min(1).max(120),
+      role: z.enum(['cashier', 'waiter', 'chef', 'kds']),
+      mode: z.enum(['invite', 'password']).optional().default('invite'),
+      password: z.string().max(128).optional(),
+    }).safeParse(await readJson(req));
+    if (!input.success) throw new HttpError(400, 'Provide a valid staff name, email, role, and invitation mode');
+    const email = input.data.email.toLowerCase();
+    const fullName = input.data.full_name;
+    const role = input.data.role;
+    const mode = input.data.mode;
 
     const admin = createAdminClient();
     let userId: string;
     if (mode === 'password') {
-      const password = String(body.password || '');
+      const password = input.data.password ?? '';
       if (password.length < 8) throw new HttpError(400, 'Password must be at least 8 characters');
       const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: fullName } });
       if (error || !data.user) throw new HttpError(400, friendly(error?.message || 'Could not create the login'));
@@ -44,8 +50,11 @@ export async function POST(req: Request) {
       id: userId, restaurant_id: profile.restaurant_id, role, full_name: fullName, email, status: mode === 'password' ? 'active' : 'invited',
     });
     if (pe) {
-      await admin.auth.admin.deleteUser(userId);
-      throw new HttpError(500, pe.message);
+      const { error: cleanupError } = await admin.auth.admin.deleteUser(userId);
+      console.error('Unable to create staff profile:', { profileError: pe.message, cleanupError: cleanupError?.message });
+      throw new HttpError(500, cleanupError
+        ? 'Could not finish creating the staff login; contact support before inviting this address again.'
+        : 'Could not finish creating the staff login');
     }
     return NextResponse.json({ ok: true });
   } catch (e) {
@@ -64,7 +73,13 @@ async function target(id: string, restaurantId: string, selfId: string) {
 export async function PATCH(req: Request) {
   try {
     const { profile } = await requireUser(['owner']);
-    const { id, role, status } = await req.json();
+    const input = z.object({
+      id: z.string().uuid(),
+      role: z.enum(['cashier', 'waiter', 'chef', 'kds']).optional(),
+      status: z.enum(['active', 'disabled']).optional(),
+    }).refine((value) => value.role !== undefined || value.status !== undefined).safeParse(await readJson(req));
+    if (!input.success) throw new HttpError(400, 'Invalid staff update');
+    const { id, role, status } = input.data;
     const { admin, member } = await target(id, profile.restaurant_id, profile.id);
     const patch: Record<string, string> = {};
     if (role !== undefined) {
@@ -104,7 +119,9 @@ export async function PATCH(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const { profile } = await requireUser(['owner']);
-    const { id } = await req.json();
+    const input = z.object({ id: z.string().uuid() }).safeParse(await readJson(req));
+    if (!input.success) throw new HttpError(400, 'Invalid staff member ID');
+    const { id } = input.data;
     const { admin } = await target(id, profile.restaurant_id, profile.id);
     const { error } = await admin.auth.admin.deleteUser(id);
     if (error) throw new Error(error.message);

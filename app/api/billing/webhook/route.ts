@@ -6,7 +6,10 @@ export const dynamic = 'force-dynamic';
 
 // Safety net: activates the plan even if the browser closed before the checkout callback ran.
 export async function POST(req: Request) {
+  const declaredSize = Number(req.headers.get('content-length') ?? 0);
+  if (declaredSize > 512 * 1024) return NextResponse.json({ error: 'Webhook payload is too large' }, { status: 413 });
   const raw = await req.text();
+  if (raw.length > 512 * 1024) return NextResponse.json({ error: 'Webhook payload is too large' }, { status: 413 });
   if (!verifyWebhookSignature(raw, req.headers.get('x-razorpay-signature') || '')) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
@@ -18,11 +21,15 @@ export async function POST(req: Request) {
       if (orderId && pay?.id) {
         const { error } = await createAdminClient().rpc('apply_payment', { p_order: orderId, p_payment: pay.id });
         // Unknown orders (e.g. other products on the same Razorpay account) are acknowledged, real failures are retried
-        if (error && !/Unknown payment order/i.test(error.message)) return NextResponse.json({ error: error.message }, { status: 500 });
+        if (error && !/Unknown payment order/i.test(error.message)) {
+          console.error('Razorpay webhook processing failed:', error.message);
+          return NextResponse.json({ error: 'Could not process payment event' }, { status: 500 });
+        }
       }
     }
     return NextResponse.json({ ok: true });
   } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+    console.error('Razorpay webhook payload processing failed:', e);
+    return NextResponse.json({ error: 'Could not process payment event' }, { status: 500 });
   }
 }

@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
-import { HttpError, fail, requireUser } from '@/lib/auth';
+import { HttpError, fail, readJson, requireUser } from '@/lib/auth';
 import { canTransitionOrder, type OrderStatus } from '@/lib/state-machines';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const cancelSchema = z.object({ order_id: z.string().uuid() });
 
 export async function POST(req: Request) {
   try {
     const { sb, profile } = await requireUser(['owner', 'cashier']);
-    const body = await req.json();
-    const orderId = body.order_id;
-    if (typeof orderId !== 'string' || !UUID.test(orderId)) throw new HttpError(400, 'Invalid order ID');
+    const parsed = cancelSchema.safeParse(await readJson(req));
+    if (!parsed.success) throw new HttpError(400, 'Invalid order ID');
+    const orderId = parsed.data.order_id;
 
     const { data: order, error: orderError } = await sb.from('orders')
       .select('id, status').eq('id', orderId).eq('restaurant_id', profile.restaurant_id).maybeSingle();
@@ -28,7 +29,10 @@ export async function POST(req: Request) {
     }
 
     const { error } = await sb.rpc('cancel_order', { p_order: orderId });
-    if (error) throw new HttpError(409, error.message);
+    if (error) {
+      console.error('Order cancellation failed:', error.message);
+      throw new HttpError(409, 'This order could not be cancelled. Refresh and try again.');
+    }
     return NextResponse.json({ ok: true, status: 'cancelled' });
   } catch (error) {
     return fail(error);

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getEffectivePrices } from '@/app/app/menu/actions';
+import { HttpError, fail, requireUser } from '@/lib/auth';
+
+export const dynamic = 'force-dynamic';
 
 const querySchema = z.object({ outletId: z.string().uuid(), at: z.string().datetime().optional() });
 
@@ -8,11 +10,17 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const input = querySchema.parse({ outletId: url.searchParams.get('outletId'), at: url.searchParams.get('at') ?? undefined });
-    const prices = await getEffectivePrices(input.outletId, input.at);
-    return NextResponse.json({ prices });
+    const { sb, profile } = await requireUser();
+    if (profile.restaurant_id !== input.outletId) throw new HttpError(403, 'The selected outlet is not available.');
+
+    const { data, error } = await sb.rpc('get_effective_prices', {
+      p_outlet: input.outletId,
+      p_at: input.at ?? new Date().toISOString(),
+    });
+    if (error) throw new HttpError(500, 'Unable to load effective prices.');
+    return NextResponse.json({ prices: data ?? [] });
   } catch (error) {
-    const message = error instanceof z.ZodError ? 'Invalid price request.' : error instanceof Error ? error.message : 'Unable to load prices.';
-    const status = message.includes('signed in') || message.includes('Permission') ? 403 : 400;
-    return NextResponse.json({ error: message }, { status });
+    if (error instanceof z.ZodError) return NextResponse.json({ error: 'Invalid price request.' }, { status: 400 });
+    return fail(error);
   }
 }

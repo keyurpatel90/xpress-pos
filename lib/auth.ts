@@ -13,7 +13,19 @@ export class HttpError extends Error {
 export function fail(e: unknown) {
   if (e instanceof HttpError) return NextResponse.json({ error: e.message }, { status: e.status });
   console.error(e);
-  return NextResponse.json({ error: (e as Error).message || 'Server error' }, { status: 500 });
+  return NextResponse.json({ error: 'An unexpected server error occurred.' }, { status: 500 });
+}
+
+export async function readJson(req: Request, maxBytes = 64 * 1024): Promise<unknown> {
+  const declaredSize = Number(req.headers.get('content-length') ?? 0);
+  if (declaredSize > maxBytes) throw new HttpError(413, 'Request body is too large');
+  const body = await req.text();
+  if (new TextEncoder().encode(body).byteLength > maxBytes) throw new HttpError(413, 'Request body is too large');
+  try {
+    return JSON.parse(body) as unknown;
+  } catch {
+    throw new HttpError(400, 'Request body must be valid JSON');
+  }
 }
 
 /** Signed-in staff member of a restaurant (optionally restricted to some roles). */

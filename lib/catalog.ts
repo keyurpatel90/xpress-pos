@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { unstable_cache } from 'next/cache';
 import { FALLBACK_PLANS, type PlanLite } from '@/lib/site';
 
 export type CatalogFeature = { key: string; label: string; description: string | null; requires_subscription: boolean; min_plan_level: number };
@@ -12,7 +13,7 @@ const FALLBACK_FLAGS: CatalogFeature[] = [
 ].map(([key, label, req, lvl]) => ({ key: key as string, label: label as string, description: null, requires_subscription: req as boolean, min_plan_level: lvl as number }));
 
 /** Public pricing data. Falls back to the seed values if the database cannot be reached (e.g. before setup). */
-export async function getCatalog(): Promise<Catalog> {
+async function readCatalog(): Promise<Catalog> {
   const fallback: Catalog = { plans: FALLBACK_PLANS, flags: FALLBACK_FLAGS, trialDays: 30, trialPremium: false, afterTrial: 'lock' };
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -36,4 +37,13 @@ export async function getCatalog(): Promise<Catalog> {
   } catch {
     return fallback;
   }
+}
+
+const getCachedCatalog = unstable_cache(readCatalog, ['public-catalog-v1'], {
+  revalidate: 60,
+  tags: ['public-catalog'],
+});
+
+export function getCatalog() {
+  return getCachedCatalog();
 }
