@@ -1,5 +1,5 @@
 'use server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { assertSuperAdmin } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { canTransitionSupportTicket, type SupportTicketStatus } from '@/lib/state-machines';
@@ -15,6 +15,7 @@ async function guard(fn: (admin: Admin) => Promise<void>): Promise<Result> {
     revalidatePath('/pricing');
     revalidatePath('/');
     revalidatePath('/features');
+    revalidateTag('public-catalog');
     return { ok: true };
   } catch (e) {
     return { ok: false, error: (e as Error).message };

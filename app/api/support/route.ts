@@ -1,23 +1,29 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { HttpError, fail, readJson } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
+const supportSchema = z.object({
+  name: z.string().trim().min(1).max(120),
+  email: z.string().trim().email().max(200),
+  phone: z.string().trim().max(30).optional().default(''),
+  message: z.string().trim().min(10).max(4000),
+  website: z.string().max(200).optional().default(''),
+});
+
 export async function POST(req: Request) {
   try {
-    const b = await req.json();
-    if (b.website) return NextResponse.json({ ok: true }); // honeypot
-    const name = String(b.name || '').trim().slice(0, 120);
-    const email = String(b.email || '').trim().slice(0, 200);
-    const phone = String(b.phone || '').trim().slice(0, 30);
-    const message = String(b.message || '').trim().slice(0, 4000);
-    if (!name || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || message.length < 10) {
-      return NextResponse.json({ error: 'Please fill in your name, a valid email and a message of at least 10 characters.' }, { status: 400 });
-    }
+    const input = supportSchema.safeParse(await readJson(req));
+    if (!input.success) throw new HttpError(400, 'Please provide your name, a valid email, and a message of at least 10 characters.');
+    if (input.data.website) return NextResponse.json({ ok: true });
+
+    const { name, email, phone, message } = input.data;
     const { error } = await createAdminClient().from('support_tickets').insert({ name, email, phone: phone || null, message });
-    if (error) throw new Error(error.message);
+    if (error) throw new HttpError(500, 'Could not send your message');
     return NextResponse.json({ ok: true });
-  } catch (e) {
-    return NextResponse.json({ error: (e as Error).message || 'Could not send your message' }, { status: 500 });
+  } catch (error) {
+    return fail(error);
   }
 }

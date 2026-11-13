@@ -1,15 +1,19 @@
 import { NextResponse } from 'next/server';
-import { HttpError, fail, requireUser } from '@/lib/auth';
+import { HttpError, fail, readJson, requireUser } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createRazorpayOrder } from '@/lib/razorpay';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
     const { sb, profile } = await requireUser(['owner']);
-    const { plan_id, cycle } = await req.json();
-    const { data: plan } = await sb.from('plans').select('*').eq('id', plan_id).eq('is_active', true).maybeSingle();
+    const input = z.object({ plan_id: z.string().uuid(), cycle: z.enum(['monthly', 'yearly']) }).safeParse(await readJson(req));
+    if (!input.success) throw new HttpError(400, 'Provide a valid plan and billing cycle');
+    const { plan_id, cycle } = input.data;
+    const { data: plan, error: planError } = await sb.from('plans').select('id,name,price_monthly,price_yearly').eq('id', plan_id).eq('is_active', true).maybeSingle();
+    if (planError) throw new HttpError(500, 'Unable to load the selected plan');
     if (!plan) throw new HttpError(404, 'That plan is not available');
 
     const months = cycle === 'yearly' ? 12 : 1;
