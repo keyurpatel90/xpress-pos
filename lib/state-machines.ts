@@ -2,6 +2,10 @@ export const ORDER_ITEM_STATUSES = ['new', 'preparing', 'ready', 'served', 'canc
 export type OrderItemStatus = (typeof ORDER_ITEM_STATUSES)[number];
 export type KitchenStage = Exclude<OrderItemStatus, 'served' | 'cancelled'>;
 
+export function isOrderItemStatus(value: unknown): value is OrderItemStatus {
+  return typeof value === 'string' && ORDER_ITEM_STATUSES.includes(value as OrderItemStatus);
+}
+
 const orderItemTransitions: Readonly<Record<OrderItemStatus, readonly OrderItemStatus[]>> = {
   new: ['preparing', 'cancelled'],
   preparing: ['ready', 'cancelled'],

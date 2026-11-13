@@ -1,7 +1,7 @@
 'use client';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { unwrap, useAction, useData, useSupabase } from '@/lib/hooks';
+import { api, unwrap, useAction, useData, useSupabase } from '@/lib/hooks';
 import { useApp, useToast } from '@/components/app/AppProvider';
 import { BillDialog } from '@/components/app/BillDialog';
 import { CustomerPicker } from '@/components/app/CustomerPicker';
@@ -143,18 +143,24 @@ function Pos() {
   async function cancelItem(item: Row) {
     if (!canTransitionOrderItem(item.status as OrderItemStatus, 'cancelled')) return;
     if (!confirm('Cancel this item?')) return;
-    await act(async () => unwrap(await sb.rpc('cancel_order_item', { p_item: item.id })), 'Item cancelled');
+    await act(() => api('/api/order-items/transition', 'POST', { ids: [item.id], from_status: item.status, action: 'cancel' }), 'Item cancelled');
     reloadOpen();
   }
   async function cancelOrder() {
-    if (!activeId || !confirm('Cancel the whole order? This cannot be undone.')) return;
-    await act(async () => unwrap(await sb.rpc('cancel_order', { p_order: activeId })), 'Order cancelled');
+    if (!activeId) return;
+    if (sentItems.some((item) => item.status === 'served')) {
+      toast('An order with served items cannot be cancelled', 'error');
+      return;
+    }
+    if (!confirm('Cancel the whole order? This cannot be undone.')) return;
+    const cancelled = await act(() => api('/api/orders/cancel', 'POST', { order_id: activeId }), 'Order cancelled');
+    if (!cancelled) { reloadOpen(); return; }
     setActiveId(null); setTableId(null); reloadOpen();
   }
   async function serve(ids: string[]) {
     const nextStatus = nextOrderItemStatus('ready');
     if (!ids.length || !nextStatus || !canTransitionOrderItem('ready', nextStatus)) return;
-    await act(async () => unwrap(await sb.rpc('set_item_status', { p_ids: ids, p_status: nextStatus })));
+    await act(() => api('/api/order-items/transition', 'POST', { ids, from_status: 'ready' }));
     reloadOpen();
   }
   function resetAfterPaid() {
@@ -361,7 +367,7 @@ function Pos() {
           {activeOrder && (
             <div className="flex justify-between">
               <button onClick={() => printKot(activeOrder.id)} className="text-xs text-ink-mute underline">Reprint last KOT</button>
-              {canBill && <button onClick={cancelOrder} className="text-xs text-rose-600 underline">Cancel order</button>}
+              {canBill && !sentItems.some((item) => item.status === 'served') && <button onClick={cancelOrder} className="text-xs text-rose-600 underline">Cancel order</button>}
             </div>
           )}
         </div>
