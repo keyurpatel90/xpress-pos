@@ -125,7 +125,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="relative flex h-dvh overflow-hidden" onClickCapture={handleLinkClick}>
-      {progress > 0 && <LinearProgress variant="indeterminate" color="secondary" className="absolute inset-x-0 top-0 z-50 h-1" aria-label="Loading page" />}
       {open && <div className="fixed inset-0 z-30 bg-ink/40 lg:hidden" onClick={() => setOpen(false)} />}
       <aside className={cn(
         'fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-line bg-white transition-transform lg:static lg:translate-x-0',
@@ -182,6 +181,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link href="/app/billing" className="font-semibold underline underline-offset-2">{access.status === 'trialing' ? translate(language, 'action.choosePlan') : translate(language, 'action.renewNow')}</Link>
           </div>
         )}
+        {progress > 0 && <LinearProgress variant="indeterminate" color="secondary" className="h-1 w-full shrink-0" aria-label="Loading page" />}
         <main className={cn('min-h-0 flex-1', full && !lockedOut && !featureOff ? 'flex flex-col overflow-hidden' : 'overflow-y-auto')}>
           {full && !lockedOut && !featureOff && !notAllowed ? body : <div className="mx-auto max-w-6xl p-4 sm:p-6">{body}</div>}
         </main>
