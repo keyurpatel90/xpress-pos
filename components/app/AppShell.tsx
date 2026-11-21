@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react';
 import LinearProgress from '@mui/material/LinearProgress';
 import { createClient } from '@/lib/supabase/client';
 import { NAV, ROLE_LABEL, landingFor, navFor } from '@/lib/roles';
@@ -36,6 +36,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { access, role, restaurant, email, has, verified, language, setLanguage } = useApp();
   const toast = useToast();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const routeKey = `${pathname}?${searchParams.toString()}`;
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [apiPending, setApiPending] = useState(false);
@@ -65,7 +67,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       const timer = window.setTimeout(() => updateProgress(0), 220);
       return () => window.clearTimeout(timer);
     }
-  }, [pathname, apiPending]);
+  }, [routeKey, apiPending]);
   useEffect(() => {
     const unsubscribe = subscribeApiLoading(setApiPending);
     return () => { unsubscribe(); };
@@ -88,6 +90,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => { if (notAllowed) router.replace(landingFor(role, false)); }, [notAllowed, role, router]);
 
   const onBilling = pathname.startsWith('/app/billing') || pathname.startsWith('/app/settings');
+
+  const handleLinkClick = (event: MouseEvent<HTMLDivElement>) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const link = target.closest('a[href]');
+    if (!(link instanceof HTMLAnchorElement) || link.target === '_blank' || link.hasAttribute('download')) return;
+    const destination = new URL(link.href, window.location.href);
+    if (destination.origin === window.location.origin && destination.href !== window.location.href) updateProgress(18);
+  };
   const lockedOut = access.locked && !(role === 'owner' && onBilling);
   const featureOff = !!current?.feature && !has(current.feature) && !access.locked;
   const items = NAV.filter((n) => n.roles.includes(role) && (!access.locked || n.href === '/app/billing' || n.href === '/app/settings'));
@@ -113,8 +124,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="relative flex h-dvh overflow-hidden">
-      {progress > 0 && <LinearProgress variant="determinate" value={progress} color="secondary" className="absolute inset-x-0 top-0 z-50 h-1" />}
+    <div className="relative flex h-dvh overflow-hidden" onClickCapture={handleLinkClick}>
+      {progress > 0 && <LinearProgress variant="indeterminate" color="secondary" className="absolute inset-x-0 top-0 z-50 h-1" aria-label="Loading page" />}
       {open && <div className="fixed inset-0 z-30 bg-ink/40 lg:hidden" onClick={() => setOpen(false)} />}
       <aside className={cn(
         'fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-line bg-white transition-transform lg:static lg:translate-x-0',
