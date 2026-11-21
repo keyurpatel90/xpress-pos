@@ -161,7 +161,10 @@ export function BillDialog({ orderId, onClose, onPaid }: { orderId: string; onCl
                     </div>
                     <Input type="number" min="0" inputMode="decimal" value={p.amount} disabled={pays.length === 1}
                       onChange={(e) => setPays(pays.map((x, i) => (i === idx ? { ...x, amount: e.target.value } : x)))} />
-                    {pays.length > 1 && <Btn variant="ghost" size="md" onClick={() => setPays(pays.filter((_, i) => i !== idx))} aria-label="Remove payment"><Icon name="x" className="h-4 w-4" /></Btn>}
+                    {pays.length > 1 && <Btn variant="ghost" size="md" onClick={() => setPays((current) => {
+                      const remainingPays = current.filter((_, i) => i !== idx);
+                      return remainingPays.length === 1 ? [{ ...remainingPays[0], amount: String(total) }] : remainingPays;
+                    })} aria-label="Remove payment"><Icon name="x" className="h-4 w-4" /></Btn>}
                   </div>
                 ))}
               </div>
