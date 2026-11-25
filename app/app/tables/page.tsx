@@ -10,7 +10,8 @@ import type { Row } from '@/lib/types';
 import { effectiveTableStatus, type StoredTableStatus, type EffectiveTableStatus } from '@/lib/state-machines';
 
 export default function TablesPage() {
-  const { role, access } = useApp();
+  const { role, access, restaurant } = useApp();
+  const formatAmount = (value: Parameters<typeof inr>[0], decimals?: number) => inr(value, decimals, restaurant.currency_code || 'INR');
   const sb = useSupabase();
   const act = useAction();
   const router = useRouter();
@@ -105,7 +106,7 @@ export default function TablesPage() {
                   </div>
                   <p className="text-xs text-ink-mute">{t.seats} seats</p>
                   <div className="mt-2">
-                    {o ? <><Badge tone="red">Occupied</Badge><p className="mt-1.5 text-xs font-semibold text-ink-soft">Order #{o.order_no}</p><p className="font-display text-base font-extrabold text-brand-600">{inr(o.total)}<span className="ml-1.5 text-xs font-medium text-ink-mute">{minutesSince(o.created_at)} min</span></p></>
+                    {o ? <><Badge tone="red">Occupied</Badge><p className="mt-1.5 text-xs font-semibold text-ink-soft">Order #{o.order_no}</p><p className="font-display text-base font-extrabold text-brand-600">{formatAmount(o.total)}<span className="ml-1.5 text-xs font-medium text-ink-mute">{minutesSince(o.created_at)} min</span></p></>
                       : busy ? <Badge tone="red">Occupied</Badge>
                       : <Badge tone={state === 'reserved' ? 'yellow' : 'green'}>{state === 'reserved' ? 'Reserved' : 'Vacant'}</Badge>}
                   </div>

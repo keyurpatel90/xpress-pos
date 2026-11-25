@@ -3,12 +3,13 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { Btn, Field, Input } from '@/components/ui';
+import { Btn, Field, Input, Select } from '@/components/ui';
+import { COUNTRIES, currencyForCountry } from '@/lib/currency';
 
 export function SignupForm() {
   const sb = useMemo(() => createClient(), []);
   const router = useRouter();
-  const [f, setF] = useState({ full_name: '', restaurant_name: '', phone: '', email: '', password: '' });
+  const [f, setF] = useState({ full_name: '', restaurant_name: '', country_code: 'IN', phone: '', email: '', password: '' });
   const [agree, setAgree] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -25,7 +26,7 @@ export function SignupForm() {
       email, password: f.password,
       options: {
         emailRedirectTo: `${location.origin}/auth/callback`,
-        data: { full_name: f.full_name.trim(), restaurant_name: f.restaurant_name.trim(), phone: f.phone.trim() },
+        data: { full_name: f.full_name.trim(), restaurant_name: f.restaurant_name.trim(), country_code: f.country_code, currency_code: currencyForCountry(f.country_code), phone: f.phone.trim() },
       },
     });
     if (err) { setError(err.message); setBusy(false); return; }
@@ -45,6 +46,11 @@ export function SignupForm() {
         <Field label="Mobile number"><Input required inputMode="tel" autoComplete="tel" value={f.phone} onChange={set('phone')} /></Field>
       </div>
       <Field label="Restaurant name"><Input required value={f.restaurant_name} onChange={set('restaurant_name')} /></Field>
+      <Field label="Country">
+        <Select required value={f.country_code} onChange={(e) => setF({ ...f, country_code: e.target.value })}>
+          {COUNTRIES.map((country) => <option key={country.code} value={country.code}>{country.name} ({country.currency})</option>)}
+        </Select>
+      </Field>
       <Field label="Email" hint="We will send a verification link here"><Input type="email" required autoComplete="email" value={f.email} onChange={set('email')} /></Field>
       <Field label="Password" hint="At least 8 characters"><Input type="password" required minLength={8} autoComplete="new-password" value={f.password} onChange={set('password')} /></Field>
       <label className="flex items-start gap-2 text-sm text-ink-soft">

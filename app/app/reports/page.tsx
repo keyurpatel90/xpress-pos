@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { unwrap, useData } from '@/lib/hooks';
+import { useApp } from '@/components/app/AppProvider';
 import { BarChart } from '@/components/BarChart';
 import { Btn, Card, Input, Loading, PageHeader, Segmented, Stat } from '@/components/ui';
 import { Icon } from '@/components/Icon';
@@ -11,6 +12,8 @@ import type { Row } from '@/lib/types';
 const addDays = (n: number) => isoDate(new Date(Date.now() + n * 86400000));
 
 export default function ReportsPage() {
+  const { restaurant } = useApp();
+  const formatAmount = (value: Parameters<typeof inr>[0], decimals?: number) => inr(value, decimals, restaurant.currency_code || 'INR');
   const [preset, setPreset] = useState('7');
   const [from, setFrom] = useState(addDays(-6));
   const [to, setTo] = useState(addDays(0));
@@ -47,25 +50,25 @@ export default function ReportsPage() {
       {loading ? <Loading variant="report" /> : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Stat label="Sales" value={inr(t.total)} />
-            <Stat label="Bills" value={t.orders ?? 0} sub={`Average ${inr(t.orders ? Number(t.total) / Number(t.orders) : 0)}`} />
-            <Stat label="Discounts given" value={inr(t.discount)} />
-            <Stat label="GST collected" value={inr(t.tax)} sub={Number(t.service_charge) > 0 ? `Service charge ${inr(t.service_charge)}` : undefined} />
+            <Stat label="Sales" value={formatAmount(t.total)} />
+            <Stat label="Bills" value={t.orders ?? 0} sub={`Average ${formatAmount(t.orders ? Number(t.total) / Number(t.orders) : 0)}`} />
+            <Stat label="Discounts given" value={formatAmount(t.discount)} />
+            <Stat label="GST collected" value={formatAmount(t.tax)} sub={Number(t.service_charge) > 0 ? `Service charge ${formatAmount(t.service_charge)}` : undefined} />
           </div>
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
             <Card className="p-4 lg:col-span-2">
               <p className="mb-3 font-display font-semibold">Sales by day</p>
-              {days.length === 0 ? <p className="py-8 text-center text-sm text-ink-mute">No paid bills in this range.</p> : <BarChart data={days.slice(-31)} format={(n) => inr(n)} />}
+              {days.length === 0 ? <p className="py-8 text-center text-sm text-ink-mute">No paid bills in this range.</p> : <BarChart data={days.slice(-31)} format={(n) => formatAmount(n)} />}
             </Card>
             <Card className="p-4">
               <p className="mb-3 font-display font-semibold">By payment mode</p>
               <ul className="divide-y divide-line text-sm">
-                {(r.by_payment ?? []).map((p: Row) => <li key={p.method} className="flex justify-between py-2"><span className="capitalize">{p.method}</span><b>{inr(p.amount)}</b></li>)}
+                {(r.by_payment ?? []).map((p: Row) => <li key={p.method} className="flex justify-between py-2"><span className="capitalize">{p.method}</span><b>{formatAmount(p.amount)}</b></li>)}
                 {(r.by_payment ?? []).length === 0 && <li className="py-2 text-ink-mute">No data</li>}
               </ul>
               <p className="mb-2 mt-5 font-display font-semibold">By order type</p>
               <ul className="divide-y divide-line text-sm">
-                {(r.by_type ?? []).map((p: Row) => <li key={p.order_type} className="flex justify-between py-2"><span>{typeLabel(p.order_type)} <span className="text-ink-mute">({p.n})</span></span><b>{inr(p.sales)}</b></li>)}
+                {(r.by_type ?? []).map((p: Row) => <li key={p.order_type} className="flex justify-between py-2"><span>{typeLabel(p.order_type)} <span className="text-ink-mute">({p.n})</span></span><b>{formatAmount(p.sales)}</b></li>)}
                 {(r.by_type ?? []).length === 0 && <li className="py-2 text-ink-mute">No data</li>}
               </ul>
             </Card>
@@ -74,7 +77,7 @@ export default function ReportsPage() {
             <p className="mb-2 font-display font-semibold">Top items</p>
             <ul className="divide-y divide-line text-sm">
               {(r.top_items ?? []).map((i: Row, n: number) => (
-                <li key={i.name} className="flex items-center justify-between py-2"><span>{n + 1}. {i.name}</span><span><b>{i.qty}</b> sold · {inr(i.revenue)}</span></li>
+                <li key={i.name} className="flex items-center justify-between py-2"><span>{n + 1}. {i.name}</span><span><b>{i.qty}</b> sold · {formatAmount(i.revenue)}</span></li>
               ))}
               {(r.top_items ?? []).length === 0 && <li className="py-2 text-ink-mute">No data</li>}
             </ul>

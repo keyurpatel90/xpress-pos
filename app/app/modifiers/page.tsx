@@ -8,7 +8,8 @@ import { inr } from '@/lib/utils';
 import type { Row } from '@/lib/types';
 
 export default function ModifiersPage() {
-  const { access } = useApp();
+  const { access, restaurant } = useApp();
+  const formatAmount = (value: Parameters<typeof inr>[0], decimals?: number) => inr(value, decimals, restaurant.currency_code || 'INR');
   const sb = useSupabase();
   const act = useAction();
   const { data: groups, loading, reload } = useData<Row[]>(
@@ -63,7 +64,7 @@ export default function ModifiersPage() {
               <ul className="my-3 flex flex-wrap gap-2">
                 {(g.modifier_options as Row[]).sort((a, b) => a.sort - b.sort).map((o) => (
                   <li key={o.id} className="flex items-center gap-1 rounded-lg bg-field px-2.5 py-1 text-sm">
-                    {o.name}{Number(o.price) > 0 && <span className="text-ink-mute"> +{inr(o.price)}</span>}
+                    {o.name}{Number(o.price) > 0 && <span className="text-ink-mute"> +{formatAmount(o.price)}</span>}
                     <button onClick={() => removeOption(o.id)} className="ml-1 text-ink-mute hover:text-rose-600" aria-label={`Remove ${o.name}`}><Icon name="x" className="h-3.5 w-3.5" /></button>
                   </li>
                 ))}
@@ -71,7 +72,7 @@ export default function ModifiersPage() {
               </ul>
               <div className="flex gap-2">
                 <Input placeholder="Option name" value={draft[g.id]?.name ?? ''} onChange={(e) => setDraft({ ...draft, [g.id]: { name: e.target.value, price: draft[g.id]?.price ?? '' } })} />
-                <Input className="w-24" type="number" min="0" placeholder="₹ extra" value={draft[g.id]?.price ?? ''} onChange={(e) => setDraft({ ...draft, [g.id]: { name: draft[g.id]?.name ?? '', price: e.target.value } })} />
+                <Input className="w-24" type="number" min="0" placeholder={`${restaurant.currency_code ?? 'INR'} extra`} value={draft[g.id]?.price ?? ''} onChange={(e) => setDraft({ ...draft, [g.id]: { name: draft[g.id]?.name ?? '', price: e.target.value } })} />
                 <Btn variant="secondary" onClick={() => addOption(g)}>Add</Btn>
               </div>
             </Card>

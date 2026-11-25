@@ -6,8 +6,18 @@ export const cn = (...a: (string | false | null | undefined)[]) => a.filter(Bool
 export const btnClass = (variant: 'primary' | 'secondary' | 'ghost' | 'danger' | 'accent' = 'primary', size: 'sm' | 'md' | 'lg' = 'md', extra?: string) =>
   cn('btn', `btn-${variant}`, `btn-${size}`, extra);
 
-export const inr = (n: number | string | null | undefined, dec = 0) =>
-  '₹' + Number(n ?? 0).toLocaleString('en-IN', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+export const inr = (n: number | string | null | undefined, dec?: number, currency = 'INR') => {
+  const options: Intl.NumberFormatOptions = { style: 'currency', currency };
+  if (dec !== undefined) {
+    options.minimumFractionDigits = dec;
+    options.maximumFractionDigits = dec;
+  }
+  try {
+    return new Intl.NumberFormat('en', options).format(Number(n ?? 0));
+  } catch {
+    return new Intl.NumberFormat('en', { style: 'currency', currency: 'INR' }).format(Number(n ?? 0));
+  }
+};
 
 export function fmtDate(d: string | Date | null | undefined, withTime = false) {
   if (!d) return '-';

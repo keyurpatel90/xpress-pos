@@ -9,6 +9,7 @@ import type { Row } from '@/lib/types';
 
 export default function CustomersPage() {
   const { access, role, restaurant, has } = useApp();
+  const formatAmount = (value: Parameters<typeof inr>[0], decimals?: number) => inr(value, decimals, restaurant.currency_code || 'INR');
   const sb = useSupabase();
   const act = useAction();
   const { data: list, loading, reload } = useData<Row[]>(async (c) => unwrap(await c.from('customers').select('*').order('created_at', { ascending: false }).limit(500)) ?? [], []);
@@ -54,7 +55,7 @@ export default function CustomersPage() {
               <td className="px-4 py-2.5 font-medium">{c.name}</td>
               <td className="px-4 py-2.5">{c.phone ?? '-'}</td>
               <td className="px-4 py-2.5">{c.visits}</td>
-              <td className="px-4 py-2.5">{inr(c.total_spent)}</td>
+              <td className="px-4 py-2.5">{formatAmount(c.total_spent)}</td>
               {showPoints && <td className="px-4 py-2.5">{c.loyalty_points}</td>}
             </tr>
           ))}
@@ -73,7 +74,7 @@ export default function CustomersPage() {
               <div className="sm:col-span-2">
                 <p className="mb-1 text-sm font-medium text-ink-soft">Recent orders</p>
                 <ul className="divide-y divide-line rounded-lg border border-line text-sm">
-                  {recent.map((o) => <li key={o.order_no} className="flex justify-between px-3 py-1.5"><span>#{o.order_no} · {fmtDate(o.created_at)}</span><b>{inr(o.total)}</b></li>)}
+                  {recent.map((o) => <li key={o.order_no} className="flex justify-between px-3 py-1.5"><span>#{o.order_no} · {fmtDate(o.created_at)}</span><b>{formatAmount(o.total)}</b></li>)}
                 </ul>
               </div>
             )}
