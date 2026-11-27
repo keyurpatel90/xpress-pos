@@ -21,6 +21,7 @@ export default function PosPage() {
 
 function Pos() {
   const { role, restaurant, print } = useApp();
+  const formatAmount = (value: Parameters<typeof inr>[0], decimals?: number) => inr(value, decimals, restaurant.currency_code || 'INR');
   const sb = useSupabase();
   const act = useAction();
   const toast = useToast();
@@ -251,7 +252,7 @@ function Pos() {
                       <span className={cn('flex h-4 w-4 items-center justify-center rounded-[3px] border-[1.5px]', i.is_veg ? 'border-emerald-600' : 'border-rose-500')}>
                         <span className={cn('h-1.5 w-1.5 rounded-full', i.is_veg ? 'bg-emerald-600' : 'bg-rose-500')} />
                       </span>
-                      <span className="font-display text-base font-extrabold">{inr(i.price)}</span>
+                      <span className="font-display text-base font-extrabold">{formatAmount(i.price)}</span>
                     </span>
                     <span className="mt-2 line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-5">{i.name}</span>
                     {i.is_combo && <span className="mt-1 inline-flex w-fit rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">Combo · {(cat.comboItems as Row[]).filter((line) => line.combo_id === i.combo_id).length} items</span>}
@@ -313,7 +314,7 @@ function Pos() {
                         <p className="text-sm font-semibold">{l.item.name}</p>
                         {l.mods.length > 0 && <p className="text-xs text-ink-mute">{l.mods.map((m) => m.name).join(', ')}</p>}
                       </div>
-                      <p className="text-sm font-semibold">{inr((Number(l.item.price) + l.mods.reduce((s, m) => s + Number(m.price), 0)) * l.qty)}</p>
+                      <p className="text-sm font-semibold">{formatAmount((Number(l.item.price) + l.mods.reduce((s, m) => s + Number(m.price), 0)) * l.qty)}</p>
                     </div>
                     <div className="mt-2 flex items-center gap-2">
                       <div className="flex items-center rounded-lg border border-line">
@@ -338,17 +339,17 @@ function Pos() {
           <Input placeholder="Order note (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
           {lines.length > 0 ? (
             <dl className="space-y-1 pb-1 text-sm">
-              <div className="flex justify-between text-ink-mute"><dt>Subtotal</dt><dd>{inr(est.sub, 2)}</dd></div>
-              {est.sc > 0 && <div className="flex justify-between text-ink-mute"><dt>Service charge</dt><dd>{inr(est.sc, 2)}</dd></div>}
-              <div className="flex justify-between text-ink-mute"><dt>{restaurant.tax_inclusive ? 'GST (included)' : 'GST'}</dt><dd>{inr(est.tax, 2)}</dd></div>
+              <div className="flex justify-between text-ink-mute"><dt>Subtotal</dt><dd>{formatAmount(est.sub, 2)}</dd></div>
+              {est.sc > 0 && <div className="flex justify-between text-ink-mute"><dt>Service charge</dt><dd>{formatAmount(est.sc, 2)}</dd></div>}
+              <div className="flex justify-between text-ink-mute"><dt>{restaurant.tax_inclusive ? 'GST (included)' : 'GST'}</dt><dd>{formatAmount(est.tax, 2)}</dd></div>
               <div className="flex items-end justify-between border-t border-line pt-2">
-                <dt className="font-bold">Estimated total</dt><dd className="font-display text-xl font-extrabold text-brand-600">{inr(est.total)}</dd>
+                <dt className="font-bold">Estimated total</dt><dd className="font-display text-xl font-extrabold text-brand-600">{formatAmount(est.total)}</dd>
               </div>
             </dl>
           ) : (
             <div className="flex items-end justify-between text-sm">
               <span className="font-bold">{activeOrder ? 'Bill so far' : 'Total'}</span>
-              <span className="font-display text-xl font-extrabold text-brand-600">{inr(activeOrder?.total ?? 0)}</span>
+              <span className="font-display text-xl font-extrabold text-brand-600">{formatAmount(activeOrder?.total ?? 0)}</span>
             </div>
           )}
           <div className="grid grid-cols-2 gap-2">
@@ -360,7 +361,7 @@ function Pos() {
             </Btn>
             {canBill && (
               <Btn variant="accent" size="lg" className="col-span-2" disabled={!activeOrder || lines.length > 0} onClick={() => activeOrder && setBillFor(activeOrder.id)}>
-                {lines.length > 0 ? 'Send items before billing' : `Bill ${activeOrder ? inr(activeOrder.total) : ''}`}
+                {lines.length > 0 ? 'Send items before billing' : `Bill ${activeOrder ? formatAmount(activeOrder.total) : ''}`}
               </Btn>
             )}
           </div>
@@ -376,7 +377,7 @@ function Pos() {
       <div className="fixed inset-x-3 bottom-3 z-30 lg:hidden">
         <button onClick={() => setCartOpen(true)} className="btn btn-primary btn-lg w-full justify-between shadow-lift">
           <span><Icon name="cart" className="mr-2 inline h-5 w-5" />View order{count > 0 ? ` (${count} new)` : ''}</span>
-          <span>{inr(lines.length > 0 ? est.total : activeOrder?.total ?? 0)}</span>
+          <span>{formatAmount(lines.length > 0 ? est.total : activeOrder?.total ?? 0)}</span>
         </button>
       </div>
 
@@ -391,7 +392,7 @@ function Pos() {
                 <button className="flex w-full items-center justify-between py-3 text-left hover:bg-field"
                   onClick={() => { setActiveId(o.id); setOrdType(o.order_type); setTableId(o.table_id); setPicker(false); }}>
                   <span><b>#{o.order_no}</b> · {o.dining_tables?.name ? `Table ${o.dining_tables.name}` : typeLabel(o.order_type)}{o.customer_name ? ` · ${o.customer_name}` : ''}</span>
-                  <span className="font-semibold">{inr(o.total)}</span>
+                  <span className="font-semibold">{formatAmount(o.total)}</span>
                 </button>
               </li>
             ))}
@@ -405,6 +406,8 @@ function Pos() {
 }
 
 function ModifierDialog({ item, groups, onClose, onAdd }: { item: Row | null; groups: Row[]; onClose: () => void; onAdd: (mods: Row[], note: string) => void }) {
+  const { restaurant } = useApp();
+  const formatAmount = (value: Parameters<typeof inr>[0], decimals?: number) => inr(value, decimals, restaurant.currency_code || 'INR');
   const [sel, setSel] = useState<Record<string, string[]>>({});
   const [note, setNote] = useState('');
   useEffect(() => { setSel({}); setNote(''); }, [item?.id]);
@@ -432,7 +435,7 @@ function ModifierDialog({ item, groups, onClose, onAdd }: { item: Row | null; gr
                 return (
                   <button key={o.id} onClick={() => toggle(g, o.id)}
                     className={cn('rounded-lg border px-3 py-1.5 text-sm font-medium', on ? 'border-brand-600 bg-brand-600 text-white' : 'border-line hover:bg-field')}>
-                    {o.name}{Number(o.price) > 0 ? ` +${inr(o.price)}` : ''}
+                    {o.name}{Number(o.price) > 0 ? ` +${formatAmount(o.price)}` : ''}
                   </button>
                 );
               })}

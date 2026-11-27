@@ -11,7 +11,8 @@ import { InventoryOperations } from '@/components/inventory/InventoryOperations'
 const REASONS: Record<string, string> = { purchase: 'Purchase', wastage: 'Wastage', correction: 'Correction', opening: 'Opening stock', sale: 'Used in orders', cancel: 'Order cancelled' };
 
 export default function InventoryPage() {
-  const { access } = useApp();
+  const { access, restaurant } = useApp();
+  const formatAmount = (value: Parameters<typeof inr>[0], decimals?: number) => inr(value, decimals, restaurant.currency_code || 'INR');
   const sb = useSupabase();
   const act = useAction();
   const { data: items, loading, reload } = useData<Row[]>(async (c) => unwrap(await c.from('inventory_items').select('*').order('name')) ?? [], []);
@@ -67,7 +68,7 @@ export default function InventoryPage() {
       <div className="mb-4 grid grid-cols-3 gap-3">
         <Stat label="Items" value={items.length} />
         <Stat label="Low stock" value={items.filter(isLow).length} tone={items.some(isLow) ? 'warn' : undefined} />
-        <Stat label="Stock value" value={inr(value)} />
+        <Stat label="Stock value" value={formatAmount(value)} />
       </div>
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Input className="max-w-xs" placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -80,8 +81,8 @@ export default function InventoryPage() {
               <td className="px-4 py-2.5 font-medium">{i.name}{i.supplier && <span className="block text-xs font-normal text-ink-mute">{i.supplier}</span>}</td>
               <td className="px-4 py-2.5">{Number(i.quantity)} {i.unit} {isLow(i) && <Badge tone="red" className="ml-1">Low</Badge>}</td>
               <td className="px-4 py-2.5 text-ink-soft">{Number(i.reorder_level) > 0 ? `${Number(i.reorder_level)} ${i.unit}` : '-'}</td>
-              <td className="px-4 py-2.5">{inr(i.cost_per_unit, 2)}</td>
-              <td className="px-4 py-2.5">{inr(Number(i.quantity) * Number(i.cost_per_unit))}</td>
+              <td className="px-4 py-2.5">{formatAmount(i.cost_per_unit, 2)}</td>
+              <td className="px-4 py-2.5">{formatAmount(Number(i.quantity) * Number(i.cost_per_unit))}</td>
               <td className="whitespace-nowrap px-4 py-2.5 text-right">
                 <Btn size="sm" variant="secondary" onClick={() => setAdj({ item: i, reason: 'purchase', qty: '', dir: 'in', note: '' })}>Adjust</Btn>
                 <button onClick={() => openHist(i)} className="p-1.5 text-ink-mute hover:text-ink" aria-label="History"><Icon name="clock" className="h-4 w-4" /></button>
@@ -98,7 +99,7 @@ export default function InventoryPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Name" className="sm:col-span-2"><Input autoFocus value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} /></Field>
             <Field label="Counted in"><Select value={edit.unit} onChange={(e) => setEdit({ ...edit, unit: e.target.value })}>{INV_UNITS.map((u) => <option key={u}>{u}</option>)}</Select></Field>
-            <Field label="Cost per unit (₹)"><Input type="number" min="0" step="0.01" value={edit.cost_per_unit} onChange={(e) => setEdit({ ...edit, cost_per_unit: e.target.value })} /></Field>
+            <Field label={`Cost per unit (${restaurant.currency_code ?? 'INR'})`}><Input type="number" min="0" step="0.01" value={edit.cost_per_unit} onChange={(e) => setEdit({ ...edit, cost_per_unit: e.target.value })} /></Field>
             {!edit.id && <Field label="Opening stock"><Input type="number" min="0" step="0.001" value={edit.opening} onChange={(e) => setEdit({ ...edit, opening: e.target.value })} /></Field>}
             <Field label="Reorder level" hint="Warn me at or below this"><Input type="number" min="0" step="0.001" value={edit.reorder_level} onChange={(e) => setEdit({ ...edit, reorder_level: e.target.value })} /></Field>
             <Field label="Supplier (optional)" className="sm:col-span-2"><Input value={edit.supplier} onChange={(e) => setEdit({ ...edit, supplier: e.target.value })} /></Field>

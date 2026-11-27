@@ -8,6 +8,7 @@ const Line = ({ l, r, bold }: { l: string; r: string; bold?: boolean }) => (
 
 export function Invoice({ restaurant: r, order: o, items, payments, tableName }:
   { restaurant: Row; order: Row; items: Row[]; payments: Row[]; tableName?: string | null }) {
+  const formatAmount = (value: Parameters<typeof inr>[0], decimals?: number) => inr(value, decimals, r.currency_code || 'INR');
   const live = items.filter((i) => i.status !== 'cancelled');
   const half = Number(o.tax_amount) / 2;
   return (
@@ -39,20 +40,20 @@ export function Invoice({ restaurant: r, order: o, items, payments, tableName }:
         );
       })}
       <Dash />
-      <Line l="Subtotal" r={inr(o.subtotal, 2)} />
-      {Number(o.discount_amount) > 0 && <Line l="Discount" r={'-' + inr(o.discount_amount, 2)} />}
-      {Number(o.loyalty_discount) > 0 && <Line l={`Points used (${o.loyalty_points_used})`} r={'-' + inr(o.loyalty_discount, 2)} />}
-      {Number(o.service_charge) > 0 && <Line l="Service charge" r={inr(o.service_charge, 2)} />}
+      <Line l="Subtotal" r={formatAmount(o.subtotal, 2)} />
+      {Number(o.discount_amount) > 0 && <Line l="Discount" r={'-' + formatAmount(o.discount_amount, 2)} />}
+      {Number(o.loyalty_discount) > 0 && <Line l={`Points used (${o.loyalty_points_used})`} r={'-' + formatAmount(o.loyalty_discount, 2)} />}
+      {Number(o.service_charge) > 0 && <Line l="Service charge" r={formatAmount(o.service_charge, 2)} />}
       {Number(o.tax_amount) > 0 && (r.tax_inclusive
-        ? <Line l="GST (included)" r={inr(o.tax_amount, 2)} />
-        : <><Line l="CGST" r={inr(half, 2)} /><Line l="SGST" r={inr(half, 2)} /></>)}
-      {Number(o.round_off) !== 0 && <Line l="Round off" r={inr(o.round_off, 2)} />}
+        ? <Line l="GST (included)" r={formatAmount(o.tax_amount, 2)} />
+        : <><Line l="CGST" r={formatAmount(half, 2)} /><Line l="SGST" r={formatAmount(half, 2)} /></>)}
+      {Number(o.round_off) !== 0 && <Line l="Round off" r={formatAmount(o.round_off, 2)} />}
       <Dash />
-      <div className="text-[15px]"><Line l="TOTAL" r={inr(o.total, 2)} bold /></div>
+      <div className="text-[15px]"><Line l="TOTAL" r={formatAmount(o.total, 2)} bold /></div>
       {payments.length > 0 && (
         <>
           <Dash />
-          {payments.map((p) => <Line key={p.id} l={`Paid by ${String(p.method).toUpperCase()}`} r={inr(p.amount, 2)} />)}
+          {payments.map((p) => <Line key={p.id} l={`Paid by ${String(p.method).toUpperCase()}`} r={formatAmount(p.amount, 2)} />)}
         </>
       )}
       <Dash />

@@ -4,7 +4,9 @@ import { api, unwrap, useAction, useSupabase } from '@/lib/hooks';
 import { useApp } from '@/components/app/AppProvider';
 import { Badge, Btn, Card, Field, Input, LinkBtn, PageHeader, Select, Toggle } from '@/components/ui';
 import { LANGUAGES, isLanguageCode, translate } from '@/lib/i18n';
+import { COUNTRIES, CURRENCIES } from '@/lib/currency';
 import type { Row } from '@/lib/types';
+import { inr } from '@/lib/utils';
 
 export default function SettingsPage() {
   const { restaurant, refresh, has, language, setLanguage } = useApp();
@@ -28,6 +30,7 @@ export default function SettingsPage() {
       name: f.name.trim(), phone: f.phone || null, email: f.email || null, address: f.address || null, city: f.city || null, state: f.state || null,
       gstin: f.gstin || null, bill_footer: f.bill_footer || '', tax_rate: Number(f.tax_rate) || 0, tax_inclusive: !!f.tax_inclusive,
       service_charge_pct: Number(f.service_charge_pct) || 0, invoice_prefix: (f.invoice_prefix || 'INV').trim(), auto_print_kot: !!f.auto_print_kot,
+      country_code: f.country_code || 'IN', currency_code: f.currency_code || 'INR',
       loyalty_enabled: !!f.loyalty_enabled, points_per_100: Number(f.points_per_100) || 0, point_value: Number(f.point_value) || 0,
     };
     const ok = await act(async () => unwrap(await sb.from('restaurants').update(payload).eq('id', restaurant.id)) ?? true, 'Settings saved');
@@ -58,6 +61,16 @@ export default function SettingsPage() {
             <Field label="Address" className="sm:col-span-2"><Input value={f.address ?? ''} onChange={(e) => set('address', e.target.value)} /></Field>
             <Field label="City"><Input value={f.city ?? ''} onChange={(e) => set('city', e.target.value)} /></Field>
             <Field label="State"><Input value={f.state ?? ''} onChange={(e) => set('state', e.target.value)} /></Field>
+            <Field label="Country">
+              <Select value={f.country_code ?? 'IN'} onChange={(e) => set('country_code', e.target.value)}>
+                {COUNTRIES.map((country) => <option key={country.code} value={country.code}>{country.name}</option>)}
+              </Select>
+            </Field>
+            <Field label="Restaurant currency" hint="Changing currency does not convert existing prices or sales totals.">
+              <Select value={f.currency_code ?? 'INR'} onChange={(e) => set('currency_code', e.target.value)}>
+                {CURRENCIES.map((currency) => <option key={currency.code} value={currency.code}>{currency.code} — {currency.name}</option>)}
+              </Select>
+            </Field>
           </div>
         </Card>
 
@@ -78,8 +91,8 @@ export default function SettingsPage() {
           {has('loyalty') ? (
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="sm:col-span-3"><Toggle checked={!!f.loyalty_enabled} onChange={(v) => set('loyalty_enabled', v)} label="Reward customers with points" /></div>
-              <Field label="Points earned per ₹100 spent"><Input type="number" min="0" step="0.01" value={f.points_per_100 ?? 0} onChange={(e) => set('points_per_100', e.target.value)} /></Field>
-              <Field label="Value of one point (₹)"><Input type="number" min="0" step="0.01" value={f.point_value ?? 0} onChange={(e) => set('point_value', e.target.value)} /></Field>
+              <Field label={`Points earned per ${inr(100, undefined, String(f.currency_code ?? 'INR'))} spent`}><Input type="number" min="0" step="0.01" value={f.points_per_100 ?? 0} onChange={(e) => set('points_per_100', e.target.value)} /></Field>
+              <Field label={`Value of one point (${inr(1, undefined, String(f.currency_code ?? 'INR'))})`}><Input type="number" min="0" step="0.01" value={f.point_value ?? 0} onChange={(e) => set('point_value', e.target.value)} /></Field>
             </div>
           ) : <p className="text-sm text-ink-mute">Loyalty points are available on a paid plan. <LinkBtn href="/app/billing" variant="ghost" size="sm">See plans</LinkBtn></p>}
         </Card>

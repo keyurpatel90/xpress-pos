@@ -11,6 +11,7 @@ import type { Row } from '@/lib/types';
 
 export default function Dashboard() {
   const { restaurant, has, role } = useApp();
+  const formatAmount = (value: Parameters<typeof inr>[0], decimals?: number) => inr(value, decimals, restaurant.currency_code || 'INR');
   const { data: d, loading, reload } = useData<Row>(async (sb) => unwrap(await sb.rpc('dashboard_summary')) ?? {}, {});
 
   useEffect(() => {
@@ -53,8 +54,8 @@ export default function Dashboard() {
         </Card>
       )}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Stat label="Today’s sales" value={inr(d.today_sales)} />
-        <Stat label="Bills today" value={d.today_orders ?? 0} sub={`Average ${inr(d.avg_bill)}`} />
+        <Stat label="Today’s sales" value={formatAmount(d.today_sales)} />
+        <Stat label="Bills today" value={d.today_orders ?? 0} sub={`Average ${formatAmount(d.avg_bill)}`} />
         <Stat label="Open orders" value={d.open_orders ?? 0} sub={`${d.tables_busy ?? 0} of ${d.tables_total ?? 0} tables busy`} />
         {has('inventory')
           ? <Stat label="Low stock items" value={d.low_stock ?? 0} tone={d.low_stock > 0 ? 'warn' : undefined} sub="At or below reorder level" />
@@ -63,7 +64,7 @@ export default function Dashboard() {
       <div className="mt-5 grid gap-4 lg:grid-cols-3">
         <Card className="p-4 lg:col-span-2">
           <p className="mb-3 font-display font-semibold">Sales, last 7 days</p>
-          <BarChart data={week} format={(n) => inr(n)} />
+          <BarChart data={week} format={(n) => formatAmount(n)} />
         </Card>
         <Card className="p-4">
           <p className="mb-3 font-display font-semibold">Best sellers this week</p>

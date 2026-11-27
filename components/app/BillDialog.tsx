@@ -13,6 +13,7 @@ type Pay = { method: string; amount: string };
 
 export function BillDialog({ orderId, onClose, onPaid }: { orderId: string; onClose: () => void; onPaid: () => void }) {
   const { restaurant, has, print } = useApp();
+  const formatAmount = (value: Parameters<typeof inr>[0], decimals?: number) => inr(value, decimals, restaurant.currency_code || 'INR');
   const sb = useSupabase();
   const act = useAction();
   const toast = useToast();
@@ -99,7 +100,7 @@ export function BillDialog({ orderId, onClose, onPaid }: { orderId: string; onCl
         <div className="space-y-4">
           <div className="text-center">
             <span className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600"><Icon name="check" className="h-6 w-6" /></span>
-            <p className="font-display text-2xl font-bold">{inr(o.total)}</p>
+            <p className="font-display text-2xl font-bold">{formatAmount(o.total)}</p>
             <p className="text-sm text-ink-mute">Invoice {done.invoice_no}</p>
             {done.points_earned > 0 && <p className="mt-1 text-sm font-medium text-emerald-700">Customer earned {done.points_earned} points</p>}
           </div>
@@ -115,7 +116,7 @@ export function BillDialog({ orderId, onClose, onPaid }: { orderId: string; onCl
   const live = items.filter((i) => i.status !== 'cancelled');
   return (
     <Modal open onClose={onClose} title={order ? `Bill for order #${order.order_no}` : 'Bill'} wide
-      footer={<><Btn variant="secondary" onClick={onClose}>Back</Btn><Btn onClick={settle} loading={busy} disabled={!canPay}>Collect {inr(total)}</Btn></>}>
+      footer={<><Btn variant="secondary" onClick={onClose}>Back</Btn><Btn onClick={settle} loading={busy} disabled={!canPay}>Collect {formatAmount(total)}</Btn></>}>
       {!order ? <p className="py-8 text-center text-sm text-ink-mute">Loading bill…</p> : (
         <div className="grid gap-5 md:grid-cols-2">
           <div>
@@ -123,29 +124,29 @@ export function BillDialog({ orderId, onClose, onPaid }: { orderId: string; onCl
               {live.map((i) => (
                 <div key={i.id} className="flex justify-between gap-2 border-b border-line px-3 py-1.5 last:border-0">
                   <span>{i.qty} × {i.name}{(i.modifiers ?? []).length > 0 && <span className="text-ink-mute"> ({(i.modifiers as Row[]).map((m) => m.name).join(', ')})</span>}</span>
-                  <span>{inr((Number(i.unit_price) + Number(i.modifier_total)) * i.qty, 2)}</span>
+                  <span>{formatAmount((Number(i.unit_price) + Number(i.modifier_total)) * i.qty, 2)}</span>
                 </div>
               ))}
             </div>
             <dl className="mt-3 space-y-1 text-sm">
-              <Row2 l="Subtotal" r={inr(order.subtotal, 2)} />
-              {Number(order.discount_amount) > 0 && <Row2 l="Discount" r={'-' + inr(order.discount_amount, 2)} />}
-              {Number(order.loyalty_discount) > 0 && <Row2 l="Points redeemed" r={'-' + inr(order.loyalty_discount, 2)} />}
-              {Number(order.service_charge) > 0 && <Row2 l="Service charge" r={inr(order.service_charge, 2)} />}
-              {Number(order.tax_amount) > 0 && <Row2 l={restaurant.tax_inclusive ? 'GST (included)' : 'GST'} r={inr(order.tax_amount, 2)} />}
-              {Number(order.round_off) !== 0 && <Row2 l="Round off" r={inr(order.round_off, 2)} />}
-              <div className="flex justify-between border-t border-line pt-2 font-display text-xl font-bold"><dt>Total</dt><dd>{inr(order.total)}</dd></div>
+              <Row2 l="Subtotal" r={formatAmount(order.subtotal, 2)} />
+              {Number(order.discount_amount) > 0 && <Row2 l="Discount" r={'-' + formatAmount(order.discount_amount, 2)} />}
+              {Number(order.loyalty_discount) > 0 && <Row2 l="Points redeemed" r={'-' + formatAmount(order.loyalty_discount, 2)} />}
+              {Number(order.service_charge) > 0 && <Row2 l="Service charge" r={formatAmount(order.service_charge, 2)} />}
+              {Number(order.tax_amount) > 0 && <Row2 l={restaurant.tax_inclusive ? 'GST (included)' : 'GST'} r={formatAmount(order.tax_amount, 2)} />}
+              {Number(order.round_off) !== 0 && <Row2 l="Round off" r={formatAmount(order.round_off, 2)} />}
+              <div className="flex justify-between border-t border-line pt-2 font-display text-xl font-bold"><dt>Total</dt><dd>{formatAmount(order.total)}</dd></div>
             </dl>
           </div>
           <div className="space-y-4">
             <Field label="Discount">
               <div className="flex gap-2">
-                <Segmented value={dtype} onChange={setDtype} options={[{ id: 'none', label: 'None' }, { id: 'percent', label: '%' }, { id: 'flat', label: '₹' }]} />
+                <Segmented value={dtype} onChange={setDtype} options={[{ id: 'none', label: 'None' }, { id: 'percent', label: '%' }, { id: 'flat', label: String(restaurant.currency_code ?? 'INR') }]} />
                 {dtype !== 'none' && <Input type="number" min="0" inputMode="decimal" value={dval} onChange={(e) => setDval(e.target.value)} placeholder={dtype === 'percent' ? 'Percent' : 'Amount'} />}
               </div>
             </Field>
             {loyaltyOk && customer && (
-              <Field label={`Redeem points (${customer.loyalty_points} available, ₹${restaurant.point_value} each)`}>
+              <Field label={`Redeem points (${customer.loyalty_points} available, ${formatAmount(restaurant.point_value)} each)`}>
                 <Input type="number" min="0" max={customer.loyalty_points} value={pts} onChange={(e) => setPts(e.target.value)} placeholder="0" />
               </Field>
             )}
@@ -173,13 +174,13 @@ export function BillDialog({ orderId, onClose, onPaid }: { orderId: string; onCl
                   <Btn variant="ghost" size="sm" onClick={() => setPays([...pays.map((p, i) => (i === 0 && pays.length === 1 ? { ...p, amount: '' } : p)), { method: 'upi', amount: '' }])}>
                     <Icon name="plus" className="h-4 w-4" /> Split payment
                   </Btn>
-                  {pays.length > 1 && <span className={Math.abs(remaining) < 0.01 ? 'text-emerald-700' : 'text-rose-600'}>{Math.abs(remaining) < 0.01 ? 'Matches total' : `Remaining ${inr(remaining, 2)}`}</span>}
+                  {pays.length > 1 && <span className={Math.abs(remaining) < 0.01 ? 'text-emerald-700' : 'text-rose-600'}>{Math.abs(remaining) < 0.01 ? 'Matches total' : `Remaining ${formatAmount(remaining, 2)}`}</span>}
                 </div>
               ) : <p className="mt-2 text-xs text-ink-mute">Split payments are available on a paid plan.</p>}
               {pays.length === 1 && pays[0].method === 'cash' && (
                 <div className="mt-3 flex items-center gap-2 text-sm">
                   <Input type="number" inputMode="decimal" placeholder="Cash received" value={cashIn} onChange={(e) => setCashIn(e.target.value)} />
-                  <span className="shrink-0 font-semibold">{change > 0 ? `Change ${inr(change, 2)}` : ''}</span>
+                  <span className="shrink-0 font-semibold">{change > 0 ? `Change ${formatAmount(change, 2)}` : ''}</span>
                 </div>
               )}
             </div>

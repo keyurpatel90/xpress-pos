@@ -15,6 +15,7 @@ const TONE: Record<string, 'green' | 'yellow' | 'red'> = { paid: 'green', open: 
 
 export default function OrdersPage() {
   const { role, restaurant, print } = useApp();
+  const formatAmount = (value: Parameters<typeof inr>[0], decimals?: number) => inr(value, decimals, restaurant.currency_code || 'INR');
   const sb = useSupabase();
   const act = useAction();
   const [date, setDate] = useState('');
@@ -74,7 +75,7 @@ export default function OrdersPage() {
               <td className="px-4 py-2.5">{new Date(o.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</td>
               <td className="px-4 py-2.5">{o.dining_tables?.name ? `Table ${o.dining_tables.name}` : typeLabel(o.order_type)}</td>
               <td className="px-4 py-2.5">{o.customer_name ?? '-'}</td>
-              <td className="px-4 py-2.5 font-semibold">{inr(o.total)}</td>
+              <td className="px-4 py-2.5 font-semibold">{formatAmount(o.total)}</td>
               <td className="px-4 py-2.5"><Badge tone={TONE[o.status]}>{o.status}</Badge></td>
             </tr>
           ))}

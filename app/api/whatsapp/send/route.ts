@@ -27,14 +27,14 @@ export async function POST(req: Request) {
     if (orderError) throw new HttpError(500, 'Unable to load this bill');
     if (!order) throw new HttpError(404, 'Order not found');
     const { data: rest, error: restaurantError } = await sb.from('restaurants')
-      .select('name').eq('id', profile.restaurant_id).single();
+      .select('name, currency_code').eq('id', profile.restaurant_id).single();
     if (restaurantError) throw new HttpError(500, 'Unable to load restaurant details');
 
     const base = (process.env.NEXT_PUBLIC_SITE_URL || new URL(req.url).origin).replace(/\/$/, '');
     const link = `${base}/b/${order.public_token}`;
     const name = order.customer_name || 'there';
     const billNo = order.invoice_no || `#${order.order_no}`;
-    const amount = inr(order.total, 2);
+    const amount = inr(order.total, 2, rest?.currency_code || 'INR');
     const text = `Hi ${name}, thank you for visiting ${rest?.name}!\nYour bill ${billNo} is ${amount}.\nView your bill: ${link}`;
 
     const admin = createAdminClient();

@@ -15,6 +15,7 @@ const blankItem = (catId: string): Row => ({
 
 export default function MenuPage() {
   const { role, has, access, restaurant } = useApp();
+  const formatAmount = (value: Parameters<typeof inr>[0], decimals?: number) => inr(value, decimals, restaurant.currency_code || 'INR');
   const sb = useSupabase();
   const act = useAction();
   const canEdit = role === 'owner';
@@ -127,7 +128,7 @@ export default function MenuPage() {
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-ink-soft">{catName(i.category_id)}</td>
-                    <td className="px-4 py-2.5">{inr(i.price, 2)} <span className="text-xs text-ink-mute">/ {i.unit}</span></td>
+                    <td className="px-4 py-2.5">{formatAmount(i.price, 2)} <span className="text-xs text-ink-mute">/ {i.unit}</span></td>
                     <td className="px-4 py-2.5 text-ink-soft">{i.tax_rate ?? restaurant.tax_rate}%</td>
                     <td className="px-4 py-2.5 text-ink-soft">{i.station}</td>
                     <td className="px-4 py-2.5"><Toggle checked={i.is_available} onChange={() => toggle(i)} /></td>
@@ -155,7 +156,7 @@ export default function MenuPage() {
                 <option value="">No category</option>{cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </Select>
             </Field>
-            <Field label="Price (₹)"><Input type="number" min="0" step="0.01" inputMode="decimal" value={item.price} onChange={(e) => setItem({ ...item, price: e.target.value })} /></Field>
+            <Field label={`Price (${restaurant.currency_code ?? 'INR'})`}><Input type="number" min="0" step="0.01" inputMode="decimal" value={item.price} onChange={(e) => setItem({ ...item, price: e.target.value })} /></Field>
             <Field label="Sold by">
               <Select value={item.unit} onChange={(e) => setItem({ ...item, unit: e.target.value })}>{UNITS.map((u) => <option key={u} value={u}>{u}</option>)}</Select>
             </Field>
